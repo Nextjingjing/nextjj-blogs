@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Pages on Nextjingjing</title>
+        <link>http://localhost:1313/page/</link>
+        <description>Recent content in Pages on Nextjingjing</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Mon, 30 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/page/index.xml" rel="self" type="application/rss+xml" /><item>
+            <title>Archives</title>
+            <link>http://localhost:1313/page/archives/</link>
+            <pubDate>Mon, 30 Mar 2026 00:00:00 +0000</pubDate>
+            <guid>http://localhost:1313/page/archives/</guid>
+            <description></description>
+        </item><item>
+            <title>About</title>
+            <link>http://localhost:1313/page/about/</link>
+            <pubDate>Thu, 26 Mar 2026 00:00:00 +0000</pubDate>
+            <guid>http://localhost:1313/page/about/</guid>
+            <description>&lt;h2 id=&#34;เกยวกบผเขยน&#34;&gt;เกี่ยวกับผู้เขียน&#xD;&#xA;&lt;/h2&gt;&lt;p&gt;สวัสดีครับผมชื่อ Nextjingjing นะครับ ผมเรียนวิศวะคอมนะ ตอนนี้ผมกำลังสนใจ Microservice และกำลังคิดว่าจะเขียน Blog เกี่ยวกับมันโดยเป็นภาษาของผมเอง ก็หวังว่าคนอื่นๆ จะเข้าใจนะครับ&lt;/p&gt;&#xA;&lt;p&gt;อนาคตอาจจะมีประเด็นอื่นๆที่ผมสนใจและผมอยากจะเขียนลง Blog อันนี้ให้นะ ขอบคุณล่วงหน้าคนที่มาอ่านทุกคนเลย&lt;/p&gt;&#xA;&lt;h3 id=&#34;my-journey&#34;&gt;My Journey&#xD;&#xA;&lt;/h3&gt;&lt;p&gt;ตอนนี้ผมยังเรียนอยู่นะ ผมขอเล่าประสบการณ์เรียนผมที่ผมคิดว่ามันเป็นก้าวสำคัญของผมนะครับ&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;OOP เป็นเรื่องแรกที่ผมเรียนแล้วรู้สึกว่ามันยากมากครับ แต่พอเรียนรู้มาได้มันก็เป็นสกิลที่ดี แม้นว่าคนเริ่มไม่ชอบ OOP แล้ว แต่ผมว่ามันก็ยังแอบๆ ใช้แนวคิด OOP อยู่ลึกๆ นะ&lt;/li&gt;&#xA;&lt;li&gt;Database พวก ER-diagram อันนี้ผมรู้สึกเลยว่ามันเป็นสกิลที่สำคัญมากๆ&lt;/li&gt;&#xA;&lt;li&gt;Full-stack Development อันนี้ผมเริ่มจาก MERN นะครับ&#xA;&lt;ul&gt;&#xA;&lt;li&gt;MongoDB&lt;/li&gt;&#xA;&lt;li&gt;Express&lt;/li&gt;&#xA;&lt;li&gt;React&lt;/li&gt;&#xA;&lt;li&gt;Node.js&lt;/li&gt;&#xA;&lt;li&gt;หลังจากนั้นก็เรียนตามกระแสไปแล้วไปลอง GO, Java&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;Linux อันนี้คือเป็นพื้นฐานของหัวข้อถัดๆ ไป&lt;/li&gt;&#xA;&lt;li&gt;Docker อันนี้ช่วยได้เยอะเลยครับ จะติดตั้งอะไรทำได้ในไม่กี่คำสั่ง&lt;/li&gt;&#xA;&lt;li&gt;kubernetes อันนี้ต่อจาก Docker แล้วจะเรียนง่ายมากๆ&lt;/li&gt;&#xA;&lt;li&gt;UML Diagram เช่น พวก State Diagram, Class Diagram, &amp;hellip;&lt;/li&gt;&#xA;&lt;li&gt;Computer Network รู้พวก IP, Subnet, HTTP, HTTPS, SSH, Routing, TCP/UDP ก็เพียงพอแล้วในความเห็นของผม&lt;/li&gt;&#xA;&lt;li&gt;Operating System อันนี้คือบอกเลยว่าทำให้ผมเห็นภาพการเขียนโปรแกรมแบบ Concurrency มากขึ้นเลยครับ&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h3 id=&#34;skills&#34;&gt;Skills&#xD;&#xA;&lt;/h3&gt;&lt;ul&gt;&#xA;&lt;li&gt;&lt;strong&gt;Front-end&lt;/strong&gt;: HTML, CSS, JavaScript, React&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Back-end&lt;/strong&gt;: Node.js, Python, Go, Java (Spring Boot)&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Tools&lt;/strong&gt;: Git, Docker, kubernetes, Hugo&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;Database&lt;/strong&gt;: PostgreSQL, MongoDB&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;h2 id=&#34;ชองทางตดตอ&#34;&gt;ช่องทางติดต่อ&#xD;&#xA;&lt;/h2&gt;&lt;ul&gt;&#xA;&lt;li&gt;&lt;strong&gt;Email&lt;/strong&gt;: &lt;a class=&#34;link&#34; href=&#34;mailto:snext2004@gmail.com.com&#34; &gt;snext2004@gmail.com&lt;/a&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a class=&#34;link&#34; href=&#34;https://github.com/Nextjingjing&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;&#xD;&#xA;    &gt;Nextjingjing&lt;/a&gt;&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;hr&gt;&#xA;&#xD;&#xA;    &lt;blockquote&gt;&#xD;&#xA;        &lt;p&gt;&amp;ldquo;Nothing is particularly hard if you divide it into small jobs.&amp;rdquo;&lt;/p&gt;&#xA;&lt;p&gt;ไม่มีอะไรที่ยากเป็นพิเศษ ถ้าคุณแบ่งมันออกเป็นงานเล็กๆ&lt;br&gt;&#xA;— &lt;em&gt;Henry Ford&lt;/em&gt;&lt;/p&gt;&#xA;&#xD;&#xA;    &lt;/blockquote&gt;&#xD;&#xA;&lt;hr&gt;&#xA;</description>
+        </item><item>
+            <title>Search</title>
+            <link>http://localhost:1313/page/search/</link>
+            <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+            <guid>http://localhost:1313/page/search/</guid>
+            <description></description>
+        </item></channel>
+</rss>

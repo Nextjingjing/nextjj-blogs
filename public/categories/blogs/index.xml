@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Blogs on Nextjingjing</title>
+        <link>http://localhost:1313/categories/blogs/</link>
+        <description>Recent content in Blogs on Nextjingjing</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Mon, 30 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="http://localhost:1313/categories/blogs/index.xml" rel="self" type="application/rss+xml" /><item>
+            <title>Microservice ตอนที่ 1 บทนำ</title>
+            <link>http://localhost:1313/blogs/microservice/01-introduction/</link>
+            <pubDate>Mon, 30 Mar 2026 00:00:00 +0000</pubDate>
+            <guid>http://localhost:1313/blogs/microservice/01-introduction/</guid>
+            <description>&lt;h1 id=&#34;awdadwawdasdawdwdasda&#34;&gt;awdadwawdasdawdwdasda&#xD;&#xA;&lt;/h1&gt;</description>
+        </item><item>
+            <title>Microservice ตอนที่ 2 interprocess communication</title>
+            <link>http://localhost:1313/blogs/microservice/02-ipc/</link>
+            <pubDate>Mon, 30 Mar 2026 00:00:00 +0000</pubDate>
+            <guid>http://localhost:1313/blogs/microservice/02-ipc/</guid>
+            <description>&lt;h2 id=&#34;awdadwawdasdawdwdasda&#34;&gt;awdadwawdasdawdwdasda&#xD;&#xA;&lt;/h2&gt;&lt;h3 id=&#34;dadwad&#34;&gt;dadwad&#xD;&#xA;&lt;/h3&gt;&lt;h2 id=&#34;awdadwawdasdawdwdasda-1&#34;&gt;awdadwawdasdawdwdasda&#xD;&#xA;&lt;/h2&gt;&lt;h2 id=&#34;awdadwawdasdawdwdasda-2&#34;&gt;awdadwawdasdawdwdasda&#xD;&#xA;&lt;/h2&gt;</description>
+        </item></channel>
+</rss>
