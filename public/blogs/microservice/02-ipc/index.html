@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en-us" dir="ltr">
     <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="Microservice ตอนที่ 2 interprocess communication">
-<title>Microservice ตอนที่ 2 interprocess communication</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="Microservice ตอนที่ 2 การสื่อสารภายใน">
+<title>Microservice ตอนที่ 2 Interprocess communication (IPC)</title>
 
 
 <link rel="canonical" href="http://localhost:1313/blogs/microservice/02-ipc/">
@@ -12,13 +12,13 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap">
 
 
-<link rel="stylesheet" href="/scss/style.min.389e156f5e9bb13df5a924cfa99dfb9c39f3e01e68d9e146cd65bdae963be145.css"><meta property='og:title' content="Microservice ตอนที่ 2 interprocess communication">
-<meta property='og:description' content="Microservice ตอนที่ 2 interprocess communication">
+<link rel="stylesheet" href="/scss/style.min.4df4c8522cc0ad28c20cdfcea7f6cfa3a509d0c92276499cf4ceb49306afe6a1.css"><meta property='og:title' content="Microservice ตอนที่ 2 Interprocess communication (IPC)">
+<meta property='og:description' content="Microservice ตอนที่ 2 การสื่อสารภายใน">
 <meta property='og:url' content='http://localhost:1313/blogs/microservice/02-ipc/'>
 <meta property='og:site_name' content='Nextjingjing'>
-<meta property='og:type' content='article'><meta property='article:section' content='Blogs' /><meta property='article:tag' content='Microservice' /><meta property='article:tag' content='Backend' /><meta property='article:published_time' content='2026-03-30T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2026-03-30T00:00:00&#43;00:00'/>
-<meta name="twitter:title" content="Microservice ตอนที่ 2 interprocess communication">
-<meta name="twitter:description" content="Microservice ตอนที่ 2 interprocess communication">
+<meta property='og:type' content='article'><meta property='article:section' content='Blogs' /><meta property='article:tag' content='Microservice' /><meta property='article:tag' content='Backend' /><meta property='article:published_time' content='2026-04-03T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2026-04-03T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Microservice ตอนที่ 2 Interprocess communication (IPC)">
+<meta name="twitter:description" content="Microservice ตอนที่ 2 การสื่อสารภายใน">
     <link rel="shortcut icon" href="/img/profile.png" />
 
     </head>
@@ -266,13 +266,18 @@
             <nav class="toc-nav" id="TableOfContents">
                 
   <ol>
-    <li><a href="#awdadwawdasdawdwdasda">awdadwawdasdawdwdasda</a>
+    <li><a href="#ชนดของ-interprocess-communication">ชนิดของ Interprocess communication</a></li>
+    <li><a href="#synchronous-remote-procedure-invocation">Synchronous remote procedure invocation</a>
       <ol>
-        <li><a href="#dadwad">dadwad</a></li>
+        <li><a href="#ลกษณะ">ลักษณะ</a></li>
+        <li><a href="#ขอด">ข้อดี</a></li>
+        <li><a href="#ประเดนสำคญ">ประเด็นสำคัญ</a>
+          <ol>
+            <li><a href="#circuit-breaker-pattern">Circuit breaker pattern</a></li>
+          </ol>
+        </li>
       </ol>
     </li>
-    <li><a href="#awdadwawdasdawdwdasda-1">awdadwawdasdawdwdasda</a></li>
-    <li><a href="#awdadwawdasdawdwdasda-2">awdadwawdasdawdwdasda</a></li>
   </ol>
 
             </nav>
@@ -304,12 +309,12 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/blogs/microservice/02-ipc/">Microservice ตอนที่ 2 interprocess communication</a>
+            <a href="/blogs/microservice/02-ipc/">Microservice ตอนที่ 2 Interprocess communication (IPC)</a>
         </h2>
     
         
         <h3 class="article-subtitle">
-            Microservice ตอนที่ 2 interprocess communication
+            Microservice ตอนที่ 2 การสื่อสารภายใน
         </h3>
         
     </div>
@@ -334,7 +339,7 @@
   <path d="M3 11h16" />
   <path d="M18 16.496v1.504l1 1" />
 </svg>
-                    <time class="article-time--published" datetime='2026-03-30T00:00:00Z'>Monday, March 30, 2026</time>
+                    <time class="article-time--published" datetime='2026-04-03T00:00:00Z'>Friday, April 3, 2026</time>
                 
 
                 
@@ -374,13 +379,18 @@
             <nav class="toc-nav">
                 
   <ol>
-    <li><a href="#awdadwawdasdawdwdasda">awdadwawdasdawdwdasda</a>
+    <li><a href="#ชนดของ-interprocess-communication">ชนิดของ Interprocess communication</a></li>
+    <li><a href="#synchronous-remote-procedure-invocation">Synchronous remote procedure invocation</a>
       <ol>
-        <li><a href="#dadwad">dadwad</a></li>
+        <li><a href="#ลกษณะ">ลักษณะ</a></li>
+        <li><a href="#ขอด">ข้อดี</a></li>
+        <li><a href="#ประเดนสำคญ">ประเด็นสำคัญ</a>
+          <ol>
+            <li><a href="#circuit-breaker-pattern">Circuit breaker pattern</a></li>
+          </ol>
+        </li>
       </ol>
     </li>
-    <li><a href="#awdadwawdasdawdwdasda-1">awdadwawdasdawdwdasda</a></li>
-    <li><a href="#awdadwawdasdawdwdasda-2">awdadwawdasdawdwdasda</a></li>
   </ol>
 
             </nav>
@@ -391,11 +401,66 @@
     <section class="article-content">
     
     
-    <h2 id="awdadwawdasdawdwdasda">awdadwawdasdawdwdasda
-</h2><h3 id="dadwad">dadwad
-</h3><h2 id="awdadwawdasdawdwdasda-1">awdadwawdasdawdwdasda
-</h2><h2 id="awdadwawdasdawdwdasda-2">awdadwawdasdawdwdasda
+    <h1 id="interprocess-communication-การสอสารภายใน">Interprocess communication (การสื่อสารภายใน)
+</h1>
+    <blockquote>
+        <p>การสื่อสารระหว่าง Service นั้นเป็นหนึ่งในหัวใจหลักของ Microservice ทำให้เกิดการแลกเปลี่ยนข้อมูลซึ่งกันและกัน</p>
+
+    </blockquote>
+<h2 id="ชนดของ-interprocess-communication">ชนิดของ Interprocess communication
+</h2><p>แบ่งออกเป็น 2 ชนิดได้แก่</p>
+<ol>
+<li>Synchronous remote procedure invocation
+<ul>
+<li>ตัวอย่างเช่น gRPC, REST เป็นต้น</li>
+<li>Circuit breaker pattern</li>
+</ul>
+</li>
+<li>Asynchronous messaging
+<ul>
+<li>ตัวอย่างเช่น Kafka, RabbitMQ เป็นต้น</li>
+<li>Message Broker pattern</li>
+<li>Outbox Pattern</li>
+</ul>
+</li>
+</ol>
+<h2 id="synchronous-remote-procedure-invocation">Synchronous remote procedure invocation
 </h2>
+    <blockquote>
+        <p><strong>Important Note</strong> 📝:</p>
+<ul>
+<li>รอการตอบสนอง (Blocking)</li>
+<li>Circuit breaker pattern</li>
+</ul>
+
+    </blockquote>
+<h3 id="ลกษณะ">ลักษณะ
+</h3><ul>
+<li>Blocking เมื่อ Client ทำการ Request ไปหา Server และจะถูก Block (ต้องรอ) จนกว่า Server</li>
+<li>one-to-one สื่อสารได้แค่ 1 คู่เท่านั้น</li>
+</ul>
+<h3 id="ขอด">ข้อดี
+</h3><ul>
+<li>ไม่มีปัญหาจู้จี้จุกจิกเหมือน Asynchronous messaging</li>
+<li>เหมาะสมงานที่ต้องการคำตอบทันที (Realtime) หรือความถูกต้องสูง</li>
+</ul>
+<h3 id="ประเดนสำคญ">ประเด็นสำคัญ
+</h3><ul>
+<li><strong>gRPC ประหยัด Bandwidth</strong> มากกว่า REST</li>
+<li>ต้องมีการกำหนด Timeout ของการ Request
+<ul>
+<li>เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังรอคนตาย</li>
+</ul>
+</li>
+<li>Circuit breaker pattern
+<ul>
+<li>เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังไปถามเรื่อยๆ</li>
+<li>Circuit breaker เปรียบเสมือนสะพานไฟ ไว้กันไฟฟ้าลัดวงจร (Short Circuit) ถ้าในบริบทนี้หมายถึงป้องกันปลายทางตาย</li>
+</ul>
+</li>
+</ul>
+<h4 id="circuit-breaker-pattern">Circuit breaker pattern
+</h4>
 </section>
 
 
@@ -444,7 +509,7 @@
         
 
         <div class="article-details">
-            <h2 class="article-title">Microservice ตอนที่ 1 บทนำ</h2>
+            <h2 class="article-title">Microservice ตอนที่ 1 Monolith vs Microservice</h2>
         </div>
     </a>
 </article>

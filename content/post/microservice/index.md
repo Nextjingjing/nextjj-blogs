@@ -10,10 +10,17 @@ categories:
 tags:
     - Microservice
     - Backend
-toc: false
+toc: true
 ---
 
-# สารบัญ
-[เข้าสู่บทเรียนตอนที่ 1: Introduction](../../blogs/microservice/01-introduction/)
+## Microservice คืออะไร?
+Microservice คือสถาปัตยกรรมที่แบ่งระบบใหญ่ๆ ออกเป็นบริการย่อยๆ ที่เป็นอิสระต่อกัน ทำให้แยกกันพัฒนาได้ ซึ่งจะทำให้เกิดความ Maintainable เนื่องจากโค้ดมีขนาดเล็กกว่า 
 
-[เข้าสู่บทเรียนตอนที่ 2: interprocess communication](../../blogs/microservice/02-ipc/)
+โอเคเราควรที่จะรู้ลักษณะ, ข้อดี, ข้อเสียและข้อแตกต่างระหว่าง Monolith กับ Microservice กันดีกว่า โดยสามารถอ่านต่อได้ที่[บทที่ 1](../../blogs/microservice/01-introduction/)
+
+## สารบัญ
+[บทที่ 1: Monolith vs Microservice](../../blogs/microservice/01-introduction/)
+
+[บทที่ 2: Interprocess communication](../../blogs/microservice/02-ipc/)
+
+{{< page-nav prev-link="/../" next-link="../../blogs/microservice/01-introduction/">}}
