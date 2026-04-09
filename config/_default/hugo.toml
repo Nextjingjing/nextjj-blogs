@@ -1,4 +1,4 @@
-baseURL = 'https://Nextjingjing.github.io/nextjj-blogs/'
+baseURL = 'https://Nextjingjing.github.io/'
 locale = 'en-us'
 title = 'Nextjingjing'
 theme = 'hugo-theme-stack'
