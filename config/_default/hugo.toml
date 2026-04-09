@@ -2,5 +2,3 @@ baseURL = 'https://Nextjingjing.github.io/nextjj-blogs/'
 locale = 'en-us'
 title = 'Nextjingjing'
 theme = 'hugo-theme-stack'
-relativeURLs = true
-canonifyURLs = true
