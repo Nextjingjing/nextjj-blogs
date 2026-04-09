@@ -2,3 +2,6 @@ baseURL = 'https://example.org/'
 locale = 'en-us'
 title = 'Nextjingjing'
 theme = 'hugo-theme-stack'
+baseURL = 'https://Nextjingjing.github.io/nextjj-blogs/'
+relativeURLs = true
+canonifyURLs = true

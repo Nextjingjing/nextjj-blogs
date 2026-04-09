@@ -322,4 +322,4 @@ graph LR
 - Partition key ใช้ป้องกันข้อความผิดลำดับได้
 - Message Relay ทำได้ 2 วิธี แต่ดีที่สุดคือ Transaction Log Tailing
 
-{{< page-nav prev-link="/../01-ipc/" next-link="../03-saga/">}}
+{{< page-nav prev-link="../01-ipc/" next-link="../03-saga/">}}
