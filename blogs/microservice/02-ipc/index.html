@@ -1,0 +1,159 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><meta name=description content="Microservice ตอนที่ 2 การสื่อสารภายใน"><title>Microservice ตอนที่ 2 Inter process communication (IPC)</title><link rel=canonical href=https://example.org/blogs/microservice/02-ipc/><link rel=preconnect href=https://fonts.googleapis.com><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=preload as=style href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"><link rel=stylesheet href=/scss/style.min.4df4c8522cc0ad28c20cdfcea7f6cfa3a509d0c92276499cf4ceb49306afe6a1.css><meta property='og:title' content="Microservice ตอนที่ 2 Inter process communication (IPC)"><meta property='og:description' content="Microservice ตอนที่ 2 การสื่อสารภายใน"><meta property='og:url' content='https://example.org/blogs/microservice/02-ipc/'><meta property='og:site_name' content='Nextjingjing'><meta property='og:type' content='article'><meta property='article:section' content='Blogs'><meta property='article:tag' content='Microservice'><meta property='article:tag' content='Backend'><meta property='article:published_time' content='2026-04-03T00:00:00+00:00'><meta property='article:modified_time' content='2026-04-03T00:00:00+00:00'><meta name=twitter:title content="Microservice ตอนที่ 2 Inter process communication (IPC)"><meta name=twitter:description content="Microservice ตอนที่ 2 การสื่อสารภายใน"><link rel="shortcut icon" href=/img/profile.png></head><body class=article-page><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky"><button class="hamburger hamburger--spin" type=button id=toggle-menu aria-label="Toggle Menu">
+<span class=hamburger-box><span class=hamburger-inner></span></span></button><header><figure class=site-avatar><a href=/><img src=/img/profile.png width=860 height=1063 class=site-logo loading=lazy alt=Avatar>
+</a><span class=emoji>😊</span></figure><div class=site-meta><h1 class=site-name><a href=/>Nextjingjing</a></h1><h2 class=site-description>Hello, I'm Nextjingjing. I'm interested in Development and DevOps, and I love sharing my knowledge through blogging.</h2></div></header><ol class=menu-social><li><a href=https://www.facebook.com/pruek.tanvorakul/ title=Facebook rel=me><svg width="800" height="800" viewBox="0 0 16 16" xmlns:xlink="http://www.w3.org/1999/xlink"><rect width="16" height="16" id="icon-bound" fill="none"/><path d="M15.117.0H.883C.395.0.0.395.0.883v14.234C0 15.605.395 16 .883 16h7.664V9.812H6.469V7.391h2.078V5.608c0-2.067 1.262-3.192 3.106-3.192.883.0 1.642.066 1.863.095v2.16l-1.271.001c-1.003.0-1.197.477-1.197 1.176v1.543h2.398l-.312 2.422h-2.086V16h4.07C15.605 16 16 15.605 16 15.117V.883C16 .395 15.605.0 15.117.0z"/></svg></a></li><li><a href=https://github.com/Nextjingjing title=GitHub rel=me><svg class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6.0 00-1.3-3.2 4.2 4.2.0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3.0 00-6.2.0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2.0 00-.1 3.2A4.6 4.6.0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a></li><li><a href=https://www.instagram.com/next_pruek/ title=Instagram. rel=me><svg width="800" height="800" viewBox="0 0 32 32" id="Camada_1" xmlns:xlink="http://www.w3.org/1999/xlink"><style>.st0{fill:#fff}</style><path d="M6 2h20c2.2.0 4 1.8 4 4v20c0 2.2-1.8 4-4 4H6c-2.2.0-4-1.8-4-4V6C2 3.8 3.8 2 6 2z"/><g><path class="st0" d="M21.3 9.7c-.6.0-1.2.5-1.2 1.2s.5 1.2 1.2 1.2 1.2-.5 1.2-1.2C22.4 10.2 21.9 9.7 21.3 9.7z"/><path class="st0" d="M16 11.2c-2.7.0-4.9 2.2-4.9 4.9.0 2.7 2.2 4.9 4.9 4.9s4.9-2.2 4.9-4.9C21 13.4 18.8 11.2 16 11.2zm0 8.1c-1.7.0-3.2-1.4-3.2-3.2.0-1.7 1.4-3.2 3.2-3.2 1.7.0 3.2 1.4 3.2 3.2s-1.4 3.2-3.2 3.2z"/><path class="st0" d="M20 6h-8c-3.3.0-6 2.7-6 6v8c0 3.3 2.7 6 6 6h8c3.3.0 6-2.7 6-6v-8c0-3.3-2.7-6-6-6zm4.1 14c0 2.3-1.9 4.1-4.1 4.1h-8c-2.3.0-4.1-1.9-4.1-4.1v-8c0-2.3 1.9-4.1 4.1-4.1h8c2.3.0 4.1 1.9 4.1 4.1v8z"/></g></svg></a></li></ol><ol class=menu id=main-menu><li><a href=/><svg class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="5 12 3 12 12 3 21 12 19 12"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/><path d="M9 21v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+<span>Home</span></a></li><li><a href=/page/about/><svg class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+<span>About</span></a></li><li><a href=/page/archives/><svg class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+<span>Archives</span></a></li><li><a href=/page/search/><svg class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+<span>Search</span></a></li><li class=menu-bottom-section><ol class=menu><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav class=toc-nav id=TableOfContents><ol><li><a href=#ชนดของ-inter-process-communication>ชนิดของ Inter process communication</a></li><li><a href=#synchronous-remote-procedure-invocation>Synchronous remote procedure invocation</a><ol><li><a href=#ลกษณะ>ลักษณะ</a></li><li><a href=#ขอด>ข้อดี</a></li><li><a href=#ขอเสย>ข้อเสีย</a></li><li><a href=#ประเดนสำคญ>ประเด็นสำคัญ</a><ol><li><a href=#circuit-breaker-pattern>Circuit breaker pattern</a></li><li><a href=#service-discovery>Service Discovery</a></li></ol></li></ol></li><li><a href=#asynchronous-messaging>Asynchronous messaging</a><ol><li><a href=#ลกษณะ-1>ลักษณะ</a><ol><li><a href=#message-broker>Message Broker</a></li></ol></li><li><a href=#ขอด-1>ข้อดี</a></li><li><a href=#ขอเสย-1>ข้อเสีย</a></li><li><a href=#ปญหา>ปัญหา</a></li><li><a href=#การแกปญหา>การแก้ปัญหา</a><ol><li><a href=#การแกปญหา-duplicated-message>การแก้ปัญหา Duplicated message</a></li><li><a href=#การแกปญหา-incorrect-message-ordering>การแก้ปัญหา Incorrect Message Ordering</a></li><li><a href=#การแกปญหาความไม-atomicity-ของ-updating-และ-messaging>การแก้ปัญหาความไม่ Atomicity ของ Updating และ Messaging</a></li></ol></li><li><a href=#บทสรปของ-message-broker>บทสรุปของ Message broker</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/blogs/ style=background-color:#efbed3;color:#3d0f23>Blogs</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/blogs/microservice/02-ipc/>Microservice ตอนที่ 2 Inter process communication (IPC)</a></h2><h3 class=article-subtitle>Microservice ตอนที่ 2 การสื่อสารภายใน</h3></div><footer class=article-meta><div class=inline-meta><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published datetime=2026-04-03T00:00:00Z>Friday, April 3, 2026</time>
+<svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>5 minutes read</time></div></footer></div></header><aside class=article-toc><details><summary><div class=article-toc-title><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6-6 6"/></svg>
+<span>Table of contents</span></div></summary><nav class=toc-nav><ol><li><a href=#ชนดของ-inter-process-communication>ชนิดของ Inter process communication</a></li><li><a href=#synchronous-remote-procedure-invocation>Synchronous remote procedure invocation</a><ol><li><a href=#ลกษณะ>ลักษณะ</a></li><li><a href=#ขอด>ข้อดี</a></li><li><a href=#ขอเสย>ข้อเสีย</a></li><li><a href=#ประเดนสำคญ>ประเด็นสำคัญ</a><ol><li><a href=#circuit-breaker-pattern>Circuit breaker pattern</a></li><li><a href=#service-discovery>Service Discovery</a></li></ol></li></ol></li><li><a href=#asynchronous-messaging>Asynchronous messaging</a><ol><li><a href=#ลกษณะ-1>ลักษณะ</a><ol><li><a href=#message-broker>Message Broker</a></li></ol></li><li><a href=#ขอด-1>ข้อดี</a></li><li><a href=#ขอเสย-1>ข้อเสีย</a></li><li><a href=#ปญหา>ปัญหา</a></li><li><a href=#การแกปญหา>การแก้ปัญหา</a><ol><li><a href=#การแกปญหา-duplicated-message>การแก้ปัญหา Duplicated message</a></li><li><a href=#การแกปญหา-incorrect-message-ordering>การแก้ปัญหา Incorrect Message Ordering</a></li><li><a href=#การแกปญหาความไม-atomicity-ของ-updating-และ-messaging>การแก้ปัญหาความไม่ Atomicity ของ Updating และ Messaging</a></li></ol></li><li><a href=#บทสรปของ-message-broker>บทสรุปของ Message broker</a></li></ol></li></ol></nav></details></aside><section class=article-content><h1 id=inter-process-communication-การสอสารภายใน>Inter process communication (การสื่อสารภายใน)</h1><blockquote><p>การสื่อสารระหว่าง Service นั้นเป็นหนึ่งในหัวใจหลักของ Microservice ทำให้เกิดการแลกเปลี่ยนข้อมูลซึ่งกันและกัน</p></blockquote><h2 id=ชนดของ-inter-process-communication>ชนิดของ Inter process communication</h2><p>แบ่งออกเป็น 2 ชนิดได้แก่</p><ol><li>Synchronous remote procedure invocation<ul><li>ตัวอย่างเช่น gRPC, REST เป็นต้น</li><li>Circuit breaker pattern</li></ul></li><li>Asynchronous messaging<ul><li>ตัวอย่างเช่น Kafka, RabbitMQ เป็นต้น</li><li>Message Broker pattern</li><li>Outbox Pattern</li></ul></li></ol><h2 id=synchronous-remote-procedure-invocation>Synchronous remote procedure invocation</h2><blockquote><p><strong>Important Note</strong> 📝:</p><ul><li>รอการตอบสนอง (Blocking)</li><li>Circuit breaker pattern</li></ul></blockquote><h3 id=ลกษณะ>ลักษณะ</h3><ul><li>Blocking เมื่อ Client ทำการ Request ไปหา Server และจะถูก Block (ต้องรอ) จนกว่า Server</li><li>one-to-one สื่อสารได้แค่ 1 คู่เท่านั้น</li></ul><h3 id=ขอด>ข้อดี</h3><ul><li>ไม่มีปัญหาจู้จี้จุกจิกเหมือน Asynchronous messaging</li><li>เหมาะสมงานที่ต้องการคำตอบทันที (Realtime) หรือความถูกต้องสูง</li></ul><h3 id=ขอเสย>ข้อเสีย</h3><ul><li><strong>High Coupling</strong> หากมี Service ไหนตายไป ตายทั้งระบบ (Cascading Failure) เพราะรอการ Response จาก Service ที่ตายไปนั้นเอง ซึ่งจะไม่มีการตอบกลับมา</li><li>สื่อสารได้แค่ one-to-one คุยเป็นคู่ๆ เท่านั้น</li></ul><h3 id=ประเดนสำคญ>ประเด็นสำคัญ</h3><ul><li><strong>gRPC ประหยัด Bandwidth</strong> มากกว่า REST</li><li>ต้องมีการกำหนด <strong>Timeout</strong> ของการ Request<ul><li>เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังรอคนตาย</li></ul></li><li><strong>Circuit breaker pattern</strong><ul><li>เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังไปถามเรื่อยๆ</li><li>Circuit breaker เปรียบเสมือนสะพานไฟ ไว้กันไฟฟ้าลัดวงจร (Short Circuit) ถ้าในบริบทนี้หมายถึงป้องกันปลายทางตาย</li></ul></li><li>ถ้า Service มีหลายๆ Instance ต้องทำ Service Discovery<ul><li>Client-Side Discovery</li><li>Server-Side Discovery</li></ul></li></ul><h4 id=circuit-breaker-pattern>Circuit breaker pattern</h4><p>เรามาลองดูว่ามีเรื่องอะไรที่ต้องรู้เกี่ยวกับ <strong>Circuit breaker pattern</strong></p><ul><li>มี Library จัดการเรื่องพวกนี้ให้<ul><li>เช่นใน golang มี <a class=link href=https://pkg.go.dev/github.com/afex/hystrix-go/hystrix target=_blank rel=noopener>hystrix-go</a> เป็นต้น</li></ul></li></ul><pre class=mermaid style=visibility:hidden>stateDiagram-v2
+    [*] --> Closed: เริ่มต้น
+    
+    Closed --> Open: Error บ่อยๆ เกิน Threshold
+    
+    Open --> HalfOpen: รอครบเวลา
+    
+    HalfOpen --> Open: ทดสอบแล้วยัง Error
+    HalfOpen --> Closed: ทดสอบแล้ว Success</pre><ul><li><code>Closed</code> สถานะวงจรปิด ทำให้ Request เกิดตามปกติไปหาปลายทาง<ul><li>หาก Error เกิดบ่อยเกินไปจะพาไปสู่สถานะ <code>Open</code></li></ul></li><li><code>Open</code> สถานะวงจรเปิด สั่งปิดการ Request ไปหาปลายทาง<ul><li>รอเวลาสักพักเพื่อไปสู่สถานะ <code>HalfOpen</code></li></ul></li><li><code>HalfOpen</code> ที่สถานะนี้จะเกิดได้ 2 กรณี<ul><li>ไปสู่ <code>Closed</code> เมื่อทดสอบแล้ว Success</li><li>ไปสู่ <code>Open</code> เมื่อทดสอบแล้วยัง Error</li></ul></li></ul><h4 id=service-discovery>Service Discovery</h4><p>เมื่อเราอยาก Scale โดยการขยายจำนวน Instance ของ Service เช่น เปิด Service A 5 ตัว เมื่อนั้นให้รู้ไว้ว่าเราต้องทำสองกรณีนี้เสมอคือ</p><h5 id=1-client-side-discovery>1. Client-Side Discovery</h5><ul><li>Service Registry เทคโนโลยีและเครื่องมือสำคัญที่นิยมใช้ เช่น Netflix Eureka, HashiCorp Consul</li><li>Client-Side Load Balancer & Client Libraries เทคโนโลยีและเครื่องมือสำคัญที่นิยมใช้ เช่น Spring Cloud LoadBalancer, OpenFeign</li></ul><pre class=mermaid style=visibility:hidden>graph TD
+    %% Nodes
+    SR(Service Registry)
+    Client[Client]
+    
+    subgraph Service_Pool [Service A Instances]
+        S1[Service A #1]
+        S2[Service A #2]
+        S3[Service A #3]
+    end
+
+    %% Styles
+    style Client fill:#9b59b6,stroke:#333,stroke-width:2px,color:#fff
+    style SR fill:#e74c3c,stroke:#333,stroke-width:2px,color:#fff
+    style S1 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+    style S2 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+    style S3 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+
+    %% Flow
+    S1 & S2 & S3 -- "Register" --> SR
+    Client -- "1. Query Registry" --> SR
+    SR -. "2.Service Address" .-> Client
+    Client -- "3. Call Direct" --> S1</pre><ul><li>แต่ละ Instance ของ Service ต้อง register เข้า <strong>Service registry</strong></li><li>Client ต้องเป็นคนถามไปหา Server ว่ามีบริการอยู่ไหนบ้างเอง?</li><li>Client ต้องเลือก Instance ที่จะไปเอง (Direct call)<ul><li>Client ต้องทำ <strong>Client-Side Load Balancing</strong> ด้วยตัวเอง เพื่อให้เลือกได้อย่างเหมาะสมที่สุด</li></ul></li></ul><h5 id=2-server-side-discovery>2. Server-Side Discovery</h5><pre class=mermaid style=visibility:hidden>graph TD
+    %% Nodes
+    Client[Client]
+    LB(Load Balancer)
+    SR(Service Registry)
+    S1[Service A #1]
+    S2[Service A #2]
+    S3[Service A #3]
+
+    %% Styles
+    style Client fill:#9b59b6,stroke:#333,stroke-width:2px,color:#fff
+    style LB fill:#2ecc71,stroke:#333,stroke-width:2px,color:#000
+    style SR fill:#e74c3c,stroke:#333,stroke-width:2px,color:#fff
+    style S1 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+    style S2 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+    style S3 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+
+    %% Steps
+    S1 -- "register" --> SR
+    S2 -- "register" --> SR
+    S3 -- "register" --> SR
+    
+    Client -- "1. call service" --> LB
+    
+    LB <== "2. get address for service" ==> SR
+    
+    LB -- "3. call service" --> S1</pre><ul><li>แต่ละ Instance ของ Service ต้อง register เข้า <strong>Service registry</strong></li><li>Client ติดต่อกับ <strong>Load balancer</strong> ของ Server</li><li><strong>Load balancer</strong> จะเป็นผู้เลือก Instance ให้ Client</li></ul><blockquote><p><strong>Important Note</strong> 📝:</p><ul><li>Client-Side Discovery เลือกเอง</li><li>Server-Side Discovery ให้ Server เลือกให้</li></ul></blockquote><h2 id=asynchronous-messaging>Asynchronous messaging</h2><blockquote><p><strong>Important Note</strong> 📝:</p><ul><li>ไม่รอการตอบสนอง (Non-blocking)</li><li>Message broker Pattern</li><li>Outbox Pattern</li></ul></blockquote><h3 id=ลกษณะ-1>ลักษณะ</h3><ul><li>Non-blocking เมื่อ Client ทำการ Request ไม่ต้องรอ Response</li><li>สื่อสารแบบ one-to-one คุยเป็นคู่หรือ one-to-many คุยเป็นกลุ่มก็ได้</li><li>มีรูปแบบวิธีการสื่อสาร 2 รูปแบบ<ul><li>Direct message (การสื่อสารตรง) 👎<ul><li>Service รู้จักกันตรงๆ</li><li>ข้อเสีย คือ High Coupling ไม่ต่างจากแบบ Synchronous remote procedure invocation เช่น Service A คุยกับ Service B หากรู้จักกันตรงๆ จะพึ่งพากันมาเกินไป หาก Service B ตายจะส่งข้อมูลไม่ได้</li></ul></li><li>Message broker (การสื่อสารผ่านคนกลาง) 👍<ul><li>Service ไม่ได้รู้จักกันตรงๆ รู้จักแค่ Broker คนกลาง</li><li>ข้อดี คือ Loose coupling อิสระต่อกัน ไม่พึ่งพากัน</li></ul></li></ul></li></ul><blockquote><p>Message broker เป็นตัวเลือกที่ดีที่สุด</p></blockquote><h4 id=message-broker>Message Broker</h4><p>เป็นดั่งไปรษณีย์ส่งจดหมายไปยัง Service ต่างๆ</p><pre class=mermaid style=visibility:hidden>graph LR
+    %% Nodes
+    A[Service A]
+    MB[Message Broker]
+    B[Service B]
+    C[Service C]
+    D[Service D]
+
+    %% Styles
+    style A fill:#e1e1e1,stroke:#333,stroke-width:1px
+    style MB fill:#e1e1e1,stroke:#333,stroke-width:1px
+    style B fill:#e1e1e1,stroke:#333,stroke-width:1px
+    style C fill:#e1e1e1,stroke:#333,stroke-width:1px
+    style D fill:#e1e1e1,stroke:#333,stroke-width:1px
+
+    %% Flow
+    A -- "Publish" --> MB
+    MB --> B
+    MB --> C
+    MB --> D</pre><h3 id=ขอด-1>ข้อดี</h3><ul><li>Loose coupling แทบไม่ต้องพึ่งพากันเลย</li><li>Availability สูงกว่า เพราะหาก Service อื่นๆ ตายจะไม่พาเราตายไปด้วย</li><li>สื่อสารได้มากกว่า 1 คู่</li></ul><h3 id=ขอเสย-1>ข้อเสีย</h3><ul><li>ปัญหาจู้จี้จุกจิกเยอะกว่า Synchronous remote procedure invocation</li></ul><h3 id=ปญหา>ปัญหา</h3><ul><li>Duplicated message บางครั้งอาจจะเกิดข้อความซ้ำส่งไป (รับมือได้ ✅)</li><li>Incorrect Message Ordering บางครั้ง Message อาจจะผิดลำดับ (แก้ได้ ✅)</li></ul><blockquote><p>ตัวอย่างเช่น Service A มี Instance คือ S1, S2 และมี Message คือ M1, M2 หากว่าการส่ง Message กระจายตัวเป็นดังนี้</p><ul><li>M1 ไปหา S1</li><li>M2 ไปหา S2</li></ul><p>มีความเป็นไปได้ที่ M2 จะไปถึงปลายทางก่อน M1 ทำให้การ Process ผิดลำดับไป</p></blockquote><ul><li>การ Update Database และการส่ง Message <strong>ไม่</strong> Atomicity ทำให้เกิดเหตุการดังนี้ (แก้ได้ ✅)<ul><li><strong>ส่งแต่ไม่ Update</strong> คือการ Update ดันได้ Error และ Rollback ไปแล้ว แต่ยังส่ง Message ไปบอกแล้วว่า Update สำเร็วแล้ว (ทั้งๆ ที่การ Update นั้นถูกยกเลิกไปแล้ว)</li><li><strong>Update แต่ไม่ส่ง</strong> คือการ Update สำเร็จ แต่ส่ง Message <strong>ไม่สำเร็จ</strong> อันนี้ปลายทางก็จะไม่รู้ว่า Update แล้ว</li></ul></li></ul><h3 id=การแกปญหา>การแก้ปัญหา</h3><h4 id=การแกปญหา-duplicated-message>การแก้ปัญหา Duplicated message</h4><p>เราสามารถแก้ปัญหา Duplicated message ข้อความซ้ำได้โดยการบันทึก <code>Message ID</code> ของข้อความที่รับมาลง Database เพื่อให้ระบบรู้ว่าข้อความนี้เคยทำแล้วหรอไม่ ในกรณีที่มีข้อความใหม่มา โดยเราจะทำการบันทึกลง <code>PROCESSED_MESSAGE table</code> และอัพเดต Business Data Table ใน Transaction เดียวกัน</p><pre class=mermaid style=visibility:hidden>flowchart LR
+    Msg[Message] --> App[Consumer App]
+    subgraph DB [Database Transaction]
+        App -->|1. Insert| T[PROCESSED_MSG table]
+        App -->|2. Update| Biz[Business Data Table]
+    end
+    T -.->|Duplicate Key Error| Ignore[Ignore Message]</pre><h4 id=การแกปญหา-incorrect-message-ordering>การแก้ปัญหา Incorrect Message Ordering</h4><p>ปัญหานี้อาจจะพบเจอใน Tech อื่นๆ ได้บ้าง แต่ถ้าใช้ Kafka และ RabbitMQ พวกมันได้แก้ปัญหาพวกนี้ไปแล้ว</p><pre class=mermaid style=visibility:hidden>graph LR
+    subgraph P [Sender Side]
+        Sender[Sender] --> Router{Router /<br>Message Key}
+    end
+
+    subgraph Broker [Message Broker]
+        direction TB
+        subgraph P1 [Partition 1]
+            M1[orderId = 1]
+        end
+        subgraph P2 [Partition 2]
+            M2[orderId = 2]
+        end
+        subgraph P3 [Partition 3]
+            M3[orderId = 3]
+        end
+    end
+
+    subgraph C [Consumer Side]
+        P1 --> Instance1[Service A<br>Instance 1]
+        P2 --> Instance2[Service A<br>Instance 2]
+        P3 --> Instance3[Service A<br>Instance 3]
+    end
+
+    Router -- "Hashing(orderId)" --> P1
+    Router -- "Hashing(orderId)" --> P2
+    Router -- "Hashing(orderId)" --> P3
+
+    style P1 fill:#f9f,stroke:#333,stroke-width:2px
+    style P2 fill:#f9f,stroke:#333,stroke-width:2px
+    style P3 fill:#f9f,stroke:#333,stroke-width:2px</pre><p>เนื่องจากปัญหาคือการกระจาย Message ไปยัง Instance ต่างๆ ของ Service ทำให้ข้อมูลผิดลำดับได้ถูกไหม? แล้วทางแก้ปัญหานั้นก็ง่ายแสนง่าย ก็คือให้ข้อความที่มี <code>Partition key</code> อันเดียวกันส่งไปที่ Instance เดียวกัน</p><blockquote><p><strong>Important Note</strong> 📝:</p><ul><li>Partition คือท่อส่งข้อความไปหาปลายทาง</li></ul></blockquote><p>เช่น จากภาพเราใช้ Partition key เป็น OrderId ลองดูไปที่ OrderId = 1 ทุกๆ Message ที่มี OrderId = 1 จะไปอยู่ใน Partition 1 ตลอดในช่วงเวลานึง ทำให้รับประกันว่า Message จะเรียงลำดับข้อความถูกต้องเพราะไม่กระจายไปมั่วๆ</p><p>ต่อให้ Message ที่ OrderId คนละอันกันส่งแบบกระจาย Instance ต่างๆ ก็ไม่เป็นอะไร เพราะ Order คนละตัวกันไม่น่ามีผลต่อกัน สำคัญคือ Order เดียวกันส่งไปที่ Partition เดียวกันก็พอแล้ว</p><blockquote><p><strong>Important Note</strong> 📝:</p><ul><li>Kafka จัดการเรื่องพวกนี้ให้แล้ว</li></ul><p><a class=link href=https://github.com/Nextjingjing/go-god/tree/main/13-kafka target=_blank rel=noopener>การใช้งานพื้นฐาน Kafka</a></p></blockquote><h4 id=การแกปญหาความไม-atomicity-ของ-updating-และ-messaging>การแก้ปัญหาความไม่ Atomicity ของ Updating และ Messaging</h4><p>เราจะใช้ <strong>Outbox Pattern</strong> ในการแก้ปัญหานี้
+<img alt="รูป outbox" class=gallery-image data-flex-basis=675px data-flex-grow=281 height=461 loading=lazy sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src=/blogs/microservice/02-ipc/outbox.png srcset="/blogs/microservice/02-ipc/outbox_hu_77af83c2629bbae.png 800w, /blogs/microservice/02-ipc/outbox.png 1298w" width=1298>
+รูปจาก <a class=link href=https://microservices.io/patterns/data/transactional-outbox.html target=_blank rel=noopener>https://microservices.io/patterns/data/transactional-outbox.html</a></p><blockquote><p><strong>Important Note</strong> 📝:</p><p>โดยเราจะทำให้การ</p><ul><li>Update, Insert, Delete ข้อมูล Business</li><li>Insert ข้อความที่จะส่งลงใน Outbox Table</li></ul><p>ให้อยู่ใน Transaction เดียวกัน</p><p>และให้ Message Relay ไปอ่าน Outbox Table เพื่อส่งข้อความไปที่ Message broker</p></blockquote><p>การใช้ Transaction เดียวกันทั้งการ CRUD และ Messaging ทำให้เกิด Atomicity นั้นเอง</p><p>การ Implementation ของ Message Relay มีด้วยกัน 2 รูปแบบ</p><ul><li>Transaction Log Tailing (วิธีที่แนะนำ)<ul><li>Relay อ่าน Database Transaction Log (ดักจับ log)</li></ul></li><li>Polling Publisher (วิธีแบบง่าย แต่เป็นภาระ Database)<ul><li>Relay อ่าน Query ตารางตรงๆ ทุกๆ x วินาที</li></ul></li></ul><h3 id=บทสรปของ-message-broker>บทสรุปของ Message broker</h3><ul><li>จัดการ Duplicated message, ความไม่ Atomicity ของ CRUD และ Messaging<ol><li>การบันทึก Insert message id ลง <code>Processed message table</code></li><li>การทำ <code>CRUD</code> ของ Business</li><li>การส่งข้อความ Messaging ต้อง Insert ลง <code>Outbox table</code></li></ol><ul><li>(1)-(3) ทั้งหมดที่กล่าวมานี้ต้องอยู่ใน Transaction เดียวกัน</li></ul></li><li>Partition key ใช้ป้องกันข้อความผิดลำดับได้</li><li>Message Relay ทำได้ 2 วิธี แต่ดีที่สุดคือ Transaction Log Tailing</li></ul><div style=margin-top:50px;display:flex;justify-content:space-between;align-items:center><div><a href=/../01-ipc/ style="background-color:var(--card-background);border:1px solid var(--main-border-color);padding:10px 20px;border-radius:8px;text-decoration:none;color:var(--card-text-color);font-weight:700;box-shadow:0 2px 5px rgba(0,0,0,.1);display:inline-block">← หน้าก่อนหน้า</a></div><div><a href=../03-saga/ style="background-color:var(--card-background);border:1px solid var(--main-border-color);padding:10px 20px;border-radius:8px;text-decoration:none;color:var(--card-text-color);font-weight:700;box-shadow:0 2px 5px rgba(0,0,0,.1);display:inline-block">ตอนถัดไป →</a></div></div></section><footer class="article-meta article-footer"><section class=article-tags><a href=/tags/microservice/>Microservice</a>
+<a href=/tags/backend/>Backend</a></section><section class="article-copyright inline-meta"><svg class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under <a class=link href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank rel=noopener>CC BY-NC-SA 4.0</a></span></section></footer></article><aside><h2 class=section-title>Related content</h2><div class=subsection-list><div class=article-list--tile><article><a href=/blogs/microservice/03-saga/><div class=article-details><h2 class=article-title>Microservice ตอนที่ 3 saga pattern</h2></div></a></article><article><a href=/blogs/microservice/01-introduction/><div class=article-details><h2 class=article-title>Microservice ตอนที่ 1 Monolith vs Microservice</h2></div></a></article><article class=has-image><a href=/post/microservice/><div class=article-image><img alt="Featured image of post Microservice" height=150 loading=lazy src=/post/microservice/microservice-icon_hu_7285d72cc3896004.png srcset="/post/microservice/microservice-icon_hu_7285d72cc3896004.png 1x, /post/microservice/microservice-icon_hu_7212e026978759a2.png 2x" width=250></div><div class=article-details style="background:linear-gradient(0deg,#d9c73b80 0%,#f6f6f6C0 100%)"><h2 class=article-title>Microservice</h2></div></a></article></div></div></aside><footer class=site-footer><section class=copyright>&copy;
+2026 Nextjingjing</section><section class=powerby>Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a><br>Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=4.0.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a></section></footer><script type=module>
+    import gallery from '\/ts\/gallery.js';
+
+    const articleContent = document.querySelector('.article-content');
+    const shouldLoad = articleContent && (articleContent.querySelectorAll('figure').length > 0 || articleContent.querySelectorAll('img.gallery-image').length > 0);
+    
+    if (shouldLoad) {
+        gallery(articleContent);
+
+        const PhotoSwipeLightbox = (await import("https:\/\/cdn.jsdelivr.net\/npm\/photoswipe@5.4.4\/dist\/photoswipe-lightbox.esm.min.js")).default;
+        const styleHref = "https:\/\/cdn.jsdelivr.net\/npm\/photoswipe@5.4.4\/dist\/photoswipe.css";
+
+        const styleTag = document.createElement('link');
+        styleTag.rel = 'stylesheet';
+        styleTag.href = styleHref;
+        document.head.appendChild(styleTag);
+
+        const lightbox = new PhotoSwipeLightbox({
+            gallerySelector: '.article-content',
+            childSelector: 'figure a.image-link',
+            pswpModule: () => import("https:\/\/cdn.jsdelivr.net\/npm\/photoswipe@5.4.4\/dist\/photoswipe.esm.min.js")
+        });
+        lightbox.init();
+    }
+</script><div class=mermaid-modal id=mermaid-modal><div class=mermaid-modal-header><div class=mermaid-modal-controls><button data-zoom=-1>− Zoom Out</button>
+<button data-zoom=0>Reset (100%)</button>
+<button data-zoom=1>+ Zoom In</button>
+<button data-zoom=fit>Fit to Screen</button></div><button class=mermaid-modal-close id=mermaid-modal-close>✕ Close (Esc)</button></div><div class=mermaid-modal-body id=mermaid-modal-body><div class=mermaid-modal-content id=mermaid-modal-content></div></div></div><script src=https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js></script><script type=module>
+import { initMermaidPage } from '\/ts\/mermaid.js';
+initMermaidPage({"darkTheme":"dark","darkThemeVariables":{},"htmlLabels":true,"lightTheme":"default","lightThemeVariables":{},"look":"classic","securityLevel":"strict","transparentBackground":false});
+</script></main></div><script type=text/javascript src=/ts/main.acaf849f2b273f6a8368a58b001f336738d0c948d92e79b116467d0c7515f932.js defer></script></body></html>

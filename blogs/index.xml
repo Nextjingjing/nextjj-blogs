@@ -1,0 +1,1044 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Nextjingjing</title><link>https://example.org/blogs/</link><description>Recent content in Blogs on Nextjingjing</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 07 Apr 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://example.org/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>Microservice ตอนที่ 3 saga pattern</title><link>https://example.org/blogs/microservice/03-saga/</link><pubDate>Tue, 07 Apr 2026 00:00:00 +0000</pubDate><guid>https://example.org/blogs/microservice/03-saga/</guid><description>&lt;h1 id="การจดการกบ-transaction-ดวย-saga-pattern"&gt;การจัดการกับ Transaction ด้วย saga pattern
+&lt;/h1&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;เนื่องจาก Microservice แต่ละ Service มี Database เป็นของตนเอง การจัดการกับ Transaction จึงแตกต่างออกไปจาก Monolith อย่างมาก&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h2 id="กอนม-saga-pattern"&gt;ก่อนมี saga Pattern
+&lt;/h2&gt;&lt;p&gt;ก่อนมี saga Pattern นั้น การทำ Microservice ต้องจัดการ Transaction ด้วย &lt;code&gt;Distributed Transaction&lt;/code&gt; ได้แก่ 2-Phase Commit (2PC) คือการที่ให้ทุกๆ Database ในระบบต้อง Commit ให้ครบ หากไม่ครบ จะ Rollback กลับทั้งหมด &amp;ldquo;All-or-Nothing&amp;rdquo;&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;2PC ทำให้เกิดความเป็น ACID (Atomicity, Consistency, Isolation, Durability)&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;แต่ปัญหาของวิธีการ 2PC ดังกล่าว คือ &lt;strong&gt;High coupling&lt;/strong&gt; หากมี Service ไหนตาย จะตายกันทั้งระบบ&lt;/p&gt;
+&lt;p&gt;ดังนั้นหากจะทำให้ไม่เกิดปัญหานี้เราจะต้องยอมให้แต่ละ Database commit เองไปเลยแล้วหากต้อง Rollback ก็ค่อยหาทางยกเลิกผลของ Commit ทั้งหมดที่เคย Commit ไป นี้แหละแนวคิดของ saga Pattern&lt;/p&gt;
+&lt;h2 id="saga-pattern"&gt;saga Pattern
+&lt;/h2&gt;&lt;h3 id="ลกษณะ"&gt;ลักษณะ
+&lt;/h3&gt;&lt;pre class="mermaid" style="visibility:hidden"&gt;graph LR
+ subgraph Saga [Saga Pattern Execution]
+ direction LR
+ OS1[Order Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+ CS[Customer Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+ OS2[Order Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+
+ OS1 -- "Message/Event" --&gt; CS
+ CS -- "Message/Event" --&gt; OS2
+ end
+
+ style OS1 fill:#c1fba4,stroke:#333
+ style CS fill:#c1fba4,stroke:#333
+ style OS2 fill:#c1fba4,stroke:#333&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;แต่ละ Service มี Local Transaction และต่อกันเป็นลำดับของ Local Transaction&lt;/li&gt;
+&lt;li&gt;ทุกครั้งที่แต่ละ Local Transaction นั้นมีการ Commit จะส่ง Asynchronous Message/Event ไปบอก Service ตัวถัดไปให้ทำงานต่อตนเอง
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ห้ามใช้ Synchronous (เช่น HTTP Rest หรือ gRPC) เด็ดขาดเลย&lt;/strong&gt; เพราะจะเกิด High Coupling&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;SAGA ไม่มีการ Rollback แต่จะยกเลิกผลของการ Commit โดยการ &lt;code&gt;Compensating transactions&lt;/code&gt; (การชดเชย) แทนที่การ Rollback
+&lt;ul&gt;
+&lt;li&gt;เช่น พอ Commit เงินเป็น 100 บาท แต่พอต้องทำ Compensating transactions ต้องโดน -100 บาทนั้นทิ้ง แทนการ Rollback เพราะ Commit ไปแล้ว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Compensating transactions ใช้ Undo การกระทำที่ commit ไปแล้วแทนที่การ Rollback&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="ขอด"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Loose coupling หากมีคนตายไม่ตายทั้งระบบ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ซับซ้อนวุ่นวายกว่า&lt;/li&gt;
+&lt;li&gt;ใช้ Rollback ไม่ได้ ต้องคิด Logic ของ Compensating transactions&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ปญหา"&gt;ปัญหา
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ไม่ครบ ACID เพราะขาด Isolation ไป (แก้ได้ ✅)
+&lt;ul&gt;
+&lt;li&gt;เดี๋ยวคุยรายละเอียดในหัวข้อหลังๆ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="compensating-transactions"&gt;Compensating transactions
+&lt;/h2&gt;&lt;p&gt;Compensating transactions ใช้ Undo การกระทำที่ commit ไปแล้วแทนที่การ Rollback เช่น โอนเงิน 100 บาท จะชดเชยโดยการถอนเงิน 100 บาทคืน เป็นต้น หากเกิด Failure ขึ้น ระบบจะไม่ส่ง Asynchronous Message/Event ไปให้ SAGA ลำดับถัดไป แต่จะทำการชดเชย Local Transaction ตัวก่อนๆ เช่น&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;SAGA pattern ที่มีลำดับ 1, 2, 3, &lt;strong&gt;4(❌)&lt;/strong&gt;, 5, 6 หาก Failure ที่ 4 เราจะไม่ส่ง Message ไปบอก 5 ให้ทำงาน และจะทำการ Compensating transactions ชดเชยตัวก่อนๆ&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="ลำดบของการชดเชย"&gt;ลำดับของการชดเชย
+&lt;/h3&gt;&lt;pre class="mermaid" style="visibility:hidden"&gt;sequenceDiagram
+ participant S1 as Service 1 (Order)
+ participant S2 as Service 2 (Stock)
+ participant S3 as Service 3 (Payment)
+ participant S4 as Service 4 (Shipping)
+
+ Note over S1,S4: Forward Steps
+ S1-&gt;&gt;S1: Execute &amp; Commit (1)
+ S1-&gt;&gt;S2: Next Step
+ S2-&gt;&gt;S2: Execute &amp; Commit (2)
+ S2-&gt;&gt;S3: Next Step
+ S3-&gt;&gt;S3: Execute &amp; Commit (3)
+ S3-&gt;&gt;S4: Next Step
+ 
+ Note right of S4: ❌ Step 4 Fails!
+ S4--&gt;&gt;S4: Abort (4)
+
+ Note over S1,S3: Compensation Path (Reverse Steps)
+ S4--&gt;&gt;S3: Trigger Compensation
+ S3-&gt;&gt;S3: Undo Actions (Compensate 3)
+ S3--&gt;&gt;S2: Trigger Compensation
+ S2-&gt;&gt;S2: Undo Actions (Compensate 2)
+ S2--&gt;&gt;S1: Trigger Compensation
+ S1-&gt;&gt;S1: Undo Actions (Compensate 1)
+ 
+ Note over S1,S4: System back to Consistent State&lt;/pre&gt;&lt;p&gt;จากภาพจะเห็นว่าลำดับการทำงานของ SAGA คือ Order, Stock, Payment, Shipping แต่ที่ Shipping เกิดล้มเหลวขึ้นมา ลำดับการชดเชยจึงเป็น Payment, Stock, Order &lt;strong&gt;เป็นลำดับย้อน (Reverse Order)&lt;/strong&gt;&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Compensating transactions จะเป็นลำดับย้อน (Reverse Order) ของลำดับใน SAGA ก่อน Local Transaction ที่ล้มเหลว
+&lt;ul&gt;
+&lt;li&gt;เช่น &lt;code&gt;1 commit&lt;/code&gt;, &lt;code&gt;2 commit&lt;/code&gt;, &lt;code&gt;3 commit&lt;/code&gt;, &lt;code&gt;4 failure&lt;/code&gt; จะมีลำดับชดเชยเป็น &lt;code&gt;3&lt;/code&gt;, &lt;code&gt;2&lt;/code&gt;, &lt;code&gt;1&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="บาง-transaction-อาจจะไมจำเปนตองเกดการชดเชย"&gt;บาง Transaction อาจจะไม่จำเป็นต้องเกิดการชดเชย
+&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;บาง Transaction อาจจะไม่จำเป็นต้องเกิดการชดเชย&lt;/strong&gt; เช่น พวก Transaction ที่เป็น Read-Only&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;เช่น จากตารางจะเห็นได้ว่า &lt;code&gt;verifyConsumerDetails()&lt;/code&gt; ไม่ต้อง Compensating transaction เพราะตัวเองเป็น Read-Only&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th style="text-align: left"&gt;State&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;Service&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;Transaction&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;Compensating transaction&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Commit&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Order Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;createOrder()&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;rejectOrder()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Commit&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Consumer Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;verifyConsumerDetails()&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;—&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Commit&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Kitchen Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;createTicket()&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;rejectTicket()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Failure&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Accounting Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;authorizeCreditCard()&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;—&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;-&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Kitchen Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;&lt;del&gt;approveTicket()&lt;/del&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;—&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;-&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Order Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;&lt;del&gt;approveOrder()&lt;/del&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;—&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="โครงสรางของ-saga"&gt;โครงสร้างของ saga
+&lt;/h2&gt;&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th style="text-align: left"&gt;Type&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;Service&lt;/th&gt;
+ &lt;th style="text-align: left"&gt;Transaction&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Compensatable transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Order Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;createOrder()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Compensatable transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Consumer Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;verifyConsumerDetails()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Compensatable transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Kitchen Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;createTicket()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Pivot transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Accounting Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;authorizeCreditCard()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Retriable transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Kitchen Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;approveTicket()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td style="text-align: left"&gt;&lt;strong&gt;Retriable transactions&lt;/strong&gt;&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;Order Service&lt;/td&gt;
+ &lt;td style="text-align: left"&gt;approveOrder()&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;Compensatable transactions คือ Transactions ทียอมให้เกิด Compensating ได้&lt;/li&gt;
+&lt;li&gt;Pivot transactions คือ Transactions ทีเป็นจุดตัดสินใจว่า saga นี้จะสำเร็จ หรือจะต้องไปทำ Compensating Transaction แทน&lt;/li&gt;
+&lt;li&gt;Retriable transactions คือ Transactions ที่จะไม่ทำ Compensating แต่ถ้า Failure เกิดขึ้นที่นี้ต้อง &lt;strong&gt;Retry&lt;/strong&gt; จนกว่าจะสำเร็จ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="implementation-ของ-saga-pattern"&gt;Implementation ของ saga pattern
+&lt;/h2&gt;&lt;h3 id="ประเภทของ-saga-pattern"&gt;ประเภทของ saga pattern
+&lt;/h3&gt;&lt;ol&gt;
+&lt;li&gt;Choreography-based sagas (ไร้คนคุม)&lt;/li&gt;
+&lt;li&gt;Orchestration-based sagas (มีคนคุม)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id="choreography-based-sagas"&gt;Choreography-based sagas
+&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="565px" data-flex-grow="235" height="432" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://example.org/blogs/microservice/03-saga/Create_Order_Saga.png" srcset="https://example.org/blogs/microservice/03-saga/Create_Order_Saga_hu_a358ac71906cd95f.png 800w, https://example.org/blogs/microservice/03-saga/Create_Order_Saga.png 1018w" width="1018"&gt;&lt;/p&gt;
+&lt;h4 id="ลกษณะ-1"&gt;ลักษณะ
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;ไม่มีใครคุมลำดับของ saga
+&lt;ul&gt;
+&lt;li&gt;Service พอทำ Local Transaction ของตนเองเสร็จจึง Message ไปบอก Service ตัวถัดไปเป็นทอดๆ โดยไม่มีใครคุมมัน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ขอด-1"&gt;ข้อดี
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;Loose coupling เพราะไม่มี Service ไหนรู้จักกันตรงๆ เลย&lt;/li&gt;
+&lt;li&gt;ถ้าลำดับของ saga ไม่ยาวมาก &lt;code&gt;Choreography-based sagas&lt;/code&gt; ตอบโจทย์&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ขอเสย-1"&gt;ข้อเสีย
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;ซับซ้อนเพราะพอมีไม่คนคุมลำดับ saga ต้อง implement ให้แต่ Service รับมือเอง
+&lt;ul&gt;
+&lt;li&gt;code กำหนดลำดับของ saga ไม่ได้อยู่จุดเดียว กระจายตัวไปตามแต่ละ Service&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;เข้าใจยากหาก saga มีลำดับยาว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="orchestration-based-sagas"&gt;Orchestration-based sagas
+&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="578px" data-flex-grow="240" height="608" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://example.org/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png" srcset="https://example.org/blogs/microservice/03-saga/Create_Order_Saga_Orchestration_hu_88b1e79316abac1a.png 800w, https://example.org/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png 1465w" width="1465"&gt;&lt;/p&gt;
+&lt;h4 id="ลกษณะ-2"&gt;ลักษณะ
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;มีใครคุมลำดับของ saga
+&lt;ul&gt;
+&lt;li&gt;มี Service ที่สร้าง saga ขึ้นมาและเป็นคนคมลำดับของ saga โดยอันนี้จะแตกต่างจาก saga ปกตินิดนึง&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;โดยปกติแล้ว saga จะทำงานแบบส่งต่อกันเป็นทอดๆ ตัวอย่างเช่น&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph LR
+ subgraph Saga [Choreography-based saga]
+ direction LR
+ OS1[Order Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+ CS[Customer Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+ OS2[Order Service&lt;br/&gt;&lt;b&gt;Local Transaction&lt;/b&gt;]
+
+ OS1 -- "Message/Event" --&gt; CS
+ CS -- "Message/Event" --&gt; OS2
+ end
+
+ style OS1 fill:#c1fba4,stroke:#333
+ style CS fill:#c1fba4,stroke:#333
+ style OS2 fill:#c1fba4,stroke:#333&lt;/pre&gt;&lt;p&gt;แต่ใน Orchestration-based saga จะเปลี่ยนเป็นการที่ให้ Service (Orchestrator) หนึ่งควบคุม saga ไปเลย&lt;/p&gt;
+&lt;p&gt;ส่วน Service อื่นๆ เมื่อก็รอให้ Orchestrator มาสั่งงานตนเอง&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;sequenceDiagram
+ participant S1 as Order (Orchestrator)
+ participant S2 as Stock
+ participant S3 as Payment
+ participant S4 as Shipping
+
+ Note over S1: เริ่ม Saga
+ S1-&gt;&gt;S2: 1. สั่งจองสต็อก
+ S2--&gt;&gt;S1: 2. จองสำเร็จ
+ 
+ S1-&gt;&gt;S3: 3. สั่งตัดเงิน
+ S3--&gt;&gt;S1: 4. ตัดเงินสำเร็จ
+ 
+ S1-&gt;&gt;S4: 5. สั่งเตรียมส่งของ
+ S4--&gt;&gt;S1: 6. เตรียมส่งสำเร็จ
+ 
+ Note over S1: จบ Saga (Complete)&lt;/pre&gt;&lt;p&gt;จากภาพจะเห็นว่าการสื่อสารจะกลับมาที่ Order (Orchestrator) ตลอด saga เลย&lt;/p&gt;
+&lt;h4 id="ขอด-2"&gt;ข้อดี
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;ถ้า saga มีลำดับยาวและซับซ้อน Orchestration-based saga จะตอบโจทย์กว่า&lt;/li&gt;
+&lt;li&gt;Code ที่กำหนดลำดับของ saga อยู่ในที่เดียว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ขอเสย-2"&gt;ข้อเสีย
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;Orchestrator มี Business logic เยอะเกินไป
+&lt;ul&gt;
+&lt;li&gt;แก้ได้โดยแยกเป็นอีก Service ไปเลย เช่น &lt;code&gt;Order Service&lt;/code&gt; แยกเป็น &lt;code&gt;Order Service&lt;/code&gt; + &lt;code&gt;OrderOrchestrator&lt;/code&gt; แทน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Tight Coupling ที่ตรง Orchestrator เพราะต้องรู้จักทุกๆ Service&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;p&gt;Orchestrator มี Business logic เยอะเกินไป สามารถแก้ได้โดยแยกเป็นอีก Service ไปเลย เช่น &lt;code&gt;Order Service&lt;/code&gt; แยกเป็น &lt;code&gt;Order Service&lt;/code&gt; + &lt;code&gt;OrderOrchestrator&lt;/code&gt; แทน&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="คำแนะนำ"&gt;คำแนะนำ
+&lt;/h3&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;p&gt;Chris Richardson (คนเขียน Microservices Patterns: With Examples in Java) แนะนำว่าให้ใช้ Orchestration-based sagas ทุกกรณี&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ยกเว้นว่า saga แบบเรียบง่ายมากๆ&lt;/strong&gt; สามารถใช้ Choreography-based sagas แทนได้&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;เทคโนโลยีและเครื่องมือยอดนิยมสำหรับ Orchestration Saga
+&lt;ul&gt;
+&lt;li&gt;Temporal.io&lt;/li&gt;
+&lt;li&gt;Camunda&lt;/li&gt;
+&lt;li&gt;AWS Step Functions&lt;/li&gt;
+&lt;li&gt;&amp;hellip; เป็นต้น&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="การรบมอกบการขาด-isolation-ของ-acid-ใน-saga-pattern"&gt;การรับมือกับการขาด Isolation ของ ACID ใน saga pattern
+&lt;/h2&gt;&lt;h3 id="ปญหา-1"&gt;ปัญหา
+&lt;/h3&gt;&lt;p&gt;Isolation คือ กฏที่ช่วยให้ Transaction นั้นเกิด Consistency (ความถูกต้องของข้อมูล) แต่พอขาด Isolation ใน saga ไปแล้วอาจจะเกิดปัญหา &lt;strong&gt;Lost Updates&lt;/strong&gt;, &lt;strong&gt;Dirty Reads&lt;/strong&gt; ขอยกตัวอย่างเพื่อความเข้าใจง่ายขึ้น&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;ตัวอย่างที่ 1 Lost Updates&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;saga A กำลังอัพเดต Order X&lt;/li&gt;
+&lt;li&gt;saga B กำลังยกเลิก Order X และ Commit แล้ว&lt;/li&gt;
+&lt;li&gt;saga A อัพเดต Order X เสร็จและ Commit แล้ว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;แบบนี้มีสิทธิ์ที่การยกเลิกจะหายไปเลย&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;ตัวอย่างที่ 2 Dirty Reads&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;นาย X มีเงิน 0 บาท&lt;/li&gt;
+&lt;li&gt;saga A อัพเดตให้และ commit ทำให้นาย X มีเงิน 200 บาท แต่ยังไม่จบ saga A&lt;/li&gt;
+&lt;li&gt;saga B อ่านเงินนาย X และเห็นว่ามีเงิน 200 บาท&lt;/li&gt;
+&lt;li&gt;ต่อมา saga A เกิด Failure เลยทำการ Compensating transactions
+&lt;ul&gt;
+&lt;li&gt;ทำให้นาย X มีเงิน 0 บาท&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;หากว่า saga B ยังไมจบ มันจะเอาค่าไปใช้แบบผิดๆ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="การแกปญหา"&gt;การแก้ปัญหา
+&lt;/h3&gt;&lt;h4 id="semantic-lock"&gt;Semantic lock
+&lt;/h4&gt;&lt;p&gt;เพิ่ม state มาเป็น field พิเศษไว้บอก saga อื่นๆ ว่า record นั้นกำลังถูกใช้งานอยู่โดยใช้ &lt;code&gt;*_PENDING&lt;/code&gt; เพื่อบอกว่ากำลังใช้งาน และค่อยตัด &lt;code&gt;_PENDING&lt;/code&gt; ทิ้งเมื่อ saga ทำงานจนครบลำดับ เช่น&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Order table&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;id&lt;/th&gt;
+ &lt;th&gt;create_at&lt;/th&gt;
+ &lt;th&gt;&amp;hellip;&lt;/th&gt;
+ &lt;th&gt;state&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;1&lt;/td&gt;
+ &lt;td&gt;2026-01-01&lt;/td&gt;
+ &lt;td&gt;&amp;hellip;&lt;/td&gt;
+ &lt;td&gt;APPROVAL_PENDING&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;2&lt;/td&gt;
+ &lt;td&gt;2026-01-01&lt;/td&gt;
+ &lt;td&gt;&amp;hellip;&lt;/td&gt;
+ &lt;td&gt;REVISION_PENDING&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;เมื่อ saga ทำงานสำเร็จเราจะตัด &lt;code&gt;_PENDING&lt;/code&gt; ทิ้งไป (ในที่นี้ Order Service ต้องอัพเดตดังนี้)&lt;/p&gt;
+&lt;p&gt;Order table&lt;/p&gt;
+&lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;id&lt;/th&gt;
+ &lt;th&gt;create_at&lt;/th&gt;
+ &lt;th&gt;&amp;hellip;&lt;/th&gt;
+ &lt;th&gt;state&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ &lt;tr&gt;
+ &lt;td&gt;1&lt;/td&gt;
+ &lt;td&gt;2026-01-01&lt;/td&gt;
+ &lt;td&gt;&amp;hellip;&lt;/td&gt;
+ &lt;td&gt;APPROVAL&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;2&lt;/td&gt;
+ &lt;td&gt;2026-01-01&lt;/td&gt;
+ &lt;td&gt;&amp;hellip;&lt;/td&gt;
+ &lt;td&gt;REVISION&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;/tbody&gt;
+&lt;/table&gt;
+
+ &lt;/blockquote&gt;
+&lt;h5 id="เมอ-saga-อนๆ-เจอ-_pending"&gt;เมื่อ saga อื่นๆ เจอ &lt;code&gt;*_PENDING&lt;/code&gt;
+&lt;/h5&gt;&lt;p&gt;มีได้ 2 กรณี&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;บอกให้ saga อื่นๆ ให้หยุด และ &lt;strong&gt;Retry&lt;/strong&gt; ภายหลัง
+&lt;ul&gt;
+&lt;li&gt;ทำง่ายสุด&lt;/li&gt;
+&lt;li&gt;แต่ต้องให้ Service อื่นๆ มี Retry logic ด้วย
+&lt;ul&gt;
+&lt;li&gt;โค้ดจะเยอะมาก เพราะทุก Service ที่เกี่ยวข้องกับ saga เราจะต้องมี Retry logic&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;สั่ง saga อื่นๆ ให้รอ จนกว่าจะไม่ล็อค (ตัด &lt;code&gt;_PENDING&lt;/code&gt; ทิ้งไปแล้ว)
+&lt;ul&gt;
+&lt;li&gt;ถ้าเขียนไม่ดี = อาจจะเจอ &lt;code&gt;Deadlock&lt;/code&gt; คือทุกๆ saga ต่างรอกันหมด&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id="commutative-updates-การอพเดตมสมบตสลบท"&gt;Commutative updates (การอัพเดตมีสมบัติสลับที่)
+&lt;/h4&gt;&lt;p&gt;ทำให้การอัพเดตได้ผลลัพธ์เหมือนเดิมแม้นจะเปลี่ยนลำดับ ขอทำให้เห็นภาพแบบ A + B = B + A อะไรเทือกนั้น&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;วิธีนี้แก้ Lost update ได้&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;ตัวอย่างเช่น&lt;/p&gt;
+&lt;p&gt;Account มี Transaction คือถอนเงิน &lt;code&gt;debit()&lt;/code&gt;, ฝากเงิน &lt;code&gt;credit()&lt;/code&gt; (ไม่รวมการเช็คจำนวนเงินก่อนถอนเงิน) ไม่ว่าจะทำลำดับใดก็ได้ผลลัพธ์ดังเดิมเช่น 100 - 10 + 20 = 100 + 20 - 10&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;span class="lnt"&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;-- Commutative updates
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;-- debit() 200 bath
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;UPDATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;accounts&lt;/span&gt;&lt;span class="w"&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;balance&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;balance&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;200&lt;/span&gt;&lt;span class="w"&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;account_id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;แบบนี้ Compensating transactions จะเกิดตอนไหนก็ได้เพียงแค่ credit() 200 บาทคืนไป&lt;/p&gt;
+&lt;p&gt;เรามาดูแบบที่&lt;strong&gt;ไม่เป็น Commutative updates&lt;/strong&gt; กันบ้าง&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;span class="lnt"&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;-- Non-commutative updates
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;-- debit() 200 bath
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;-- Current balance = 1000 -&amp;gt; 1000 - 200 = 800
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;UPDATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;accounts&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;balance&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;800&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;account_id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;A001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;p&gt;แบบนี้ผลลัพธ์จะไม่เท่ากันหากสลับลำดับ เช่น saga A และ saga B เริ่มอ่าน Balance = 1000 พร้อมกัน ต่อมา saga A เปลี่ยนค่าเป็น 800 (ถอน 200 บาท) และ saga B เปลี่ยนค่าเป็น 700 (ถอน 300 บาท) ตามลำดับ ผลจะกลายเป็น Balance = 700 แต่ถ้าสลับ saga B, A ผลลัพธ์จะกลายเป็น 800 บาท แต่ผลลัพธ์ที่ถูกควรเป็น Balance = 500&lt;/p&gt;
+&lt;h4 id="pessimistic-view-มองโลกในแงราย"&gt;Pessimistic View (มองโลกในแง่ร้าย)
+&lt;/h4&gt;&lt;p&gt;เรียงลำดับของ saga ใหม่ให้ลดปัญหา &lt;strong&gt;Dirty read&lt;/strong&gt; ให้มากที่สุด&lt;/p&gt;
+&lt;p&gt;Cancel Order Saga&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Consumer Service เพิ่มจำนวนยอดเงิน &lt;em&gt;&lt;strong&gt;(Compensatable transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;Order Service เปลี่ยน state เป็น cancelled &lt;em&gt;&lt;strong&gt;(Pivot transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;Delivery Service ยกเลิกการส่ง &lt;em&gt;&lt;strong&gt;(Retriable transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Delivery Service เป็นจุดเกิด Failure บ่อยๆ เช่น ไม่มีคนขับ&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;ทำไมแบบนี้จึงเกิด &lt;strong&gt;Dirty read&lt;/strong&gt; ได้ง่าย เช่น เกิด Cancel Order Saga เพิ่มยอดเงินเป็น 200 บาทและ Create order saga อ่านค่า 200 บาทและลดจำนวนยอดเงินเป็น 150 บาท ต่อมา Cancel Order Saga เกิด Failure ที่ Delivery Service ยกเลิกการส่ง ทำให้เกิดการ Compensating transactions&lt;/p&gt;
+&lt;p&gt;แต่ปัญหาคือ Create order saga อ่านค่า 200 บาทไปแล้ว&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Consumer Service จริงๆ มันไม่ควรเป็น Compensatable transactions เพราะหากถูกชดเชยจะทำให้คนอื่นเกิด &lt;strong&gt;Dirty read&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Delivery Service ควรเป็น Pivot transactions เพราะมันพังบ่อยๆ&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Pessimistic View&lt;/strong&gt; จะแก้ลำดับ saga ใหม่เป็น&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Order Service เปลี่ยน state เป็น cancelled &lt;em&gt;&lt;strong&gt;(Compensatable transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;Delivery Service ยกเลิกการส่ง &lt;em&gt;&lt;strong&gt;(Pivot transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;Consumer Service เพิ่มจำนวนยอดเงิน &lt;em&gt;&lt;strong&gt;(Retriable transactions)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;สังเกตว่า Consumer Service เพิ่มจำนวนยอดเงินเป็น Retriable transactions หมายความว่า saga ต้อง retry ไปเรื่อยๆ จนกว่าจะเพิ่มจำนวนยอดเงินสำเร็จ&lt;/p&gt;
+&lt;h4 id="reread-value-อานซำสองรอบ"&gt;Reread value (อ่านซ้ำสองรอบ)
+&lt;/h4&gt;&lt;p&gt;การอ่านอีกรอบจะทำให้มั่นใจว่าไม่มีการเปลี่ยนแปลงเกิดขึ้นระหว่าง saga นั้นๆ&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;ป้องกัน Dirty read&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h4 id="version-file"&gt;Version File
+&lt;/h4&gt;&lt;p&gt;ไม่ใช่ว่าทุกการอัพเดตจะเป็น Commutative ไม่ใช่ว่า A + B = B + A เสมอไป ถ้ามันไม่สามารถสลับที่ได้ เราจึงควรบันทึก Operation เพื่อให้เรียงลำดับใหม่ (Reorder) ใหม่ได้ดี&lt;/p&gt;
+&lt;p&gt;เช่น ระบบนี้ไม่มี Semantic lock (ไม่มีเช็ค &lt;code&gt;*_PENDING&lt;/code&gt;)&lt;/p&gt;
+&lt;p&gt;ถ้ามีสอง saga A ทำ cancel() กับ saga B approve() ผลลัพธ์ควรได้ cancel&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ถ้า saga B มาก่อน saga A ก็ดีไปได้ cancel&lt;/li&gt;
+&lt;li&gt;แต่ถ้า saga A มาก่อน saga B ผลดันได้ approve&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;หากทำ Version File ระบบจะบันทึกทุกๆ Operation และเห็นว่า saga A มาก่อนและจะข้าม saga B ทิ้งไป&lt;/p&gt;
+&lt;h4 id="by-value-ตามมลคาความเสยง"&gt;By value (ตามมูลค่า/ความเสี่ยง)
+&lt;/h4&gt;&lt;p&gt;ดูตามมูลค่าความเสี่ยง business risk&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ความเสี่ยงต่ำ ให้ใช้ Saga เพื่อความรวดเร็วและ Scalability
+&lt;ul&gt;
+&lt;li&gt;ประสิทธิภาพสูง แต่ปลอดภัยต่ำกว่า&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ความเสี่ยงสูง ให้ใช้ Distributed Transactions (เช่น 2PC)
+&lt;ul&gt;
+&lt;li&gt;ประสิทธิภาพต่ำ แต่ปลอดภัยสูงกว่า&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
+ &lt;div&gt;
+ 
+ &lt;a href="../02-ipc/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ← หน้าก่อนหน้า
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+
+ &lt;div&gt;
+ 
+ &lt;a href="../03-saga/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ตอนถัดไป →
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>Microservice ตอนที่ 2 Inter process communication (IPC)</title><link>https://example.org/blogs/microservice/02-ipc/</link><pubDate>Fri, 03 Apr 2026 00:00:00 +0000</pubDate><guid>https://example.org/blogs/microservice/02-ipc/</guid><description>&lt;h1 id="inter-process-communication-การสอสารภายใน"&gt;Inter process communication (การสื่อสารภายใน)
+&lt;/h1&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;การสื่อสารระหว่าง Service นั้นเป็นหนึ่งในหัวใจหลักของ Microservice ทำให้เกิดการแลกเปลี่ยนข้อมูลซึ่งกันและกัน&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h2 id="ชนดของ-inter-process-communication"&gt;ชนิดของ Inter process communication
+&lt;/h2&gt;&lt;p&gt;แบ่งออกเป็น 2 ชนิดได้แก่&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Synchronous remote procedure invocation
+&lt;ul&gt;
+&lt;li&gt;ตัวอย่างเช่น gRPC, REST เป็นต้น&lt;/li&gt;
+&lt;li&gt;Circuit breaker pattern&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Asynchronous messaging
+&lt;ul&gt;
+&lt;li&gt;ตัวอย่างเช่น Kafka, RabbitMQ เป็นต้น&lt;/li&gt;
+&lt;li&gt;Message Broker pattern&lt;/li&gt;
+&lt;li&gt;Outbox Pattern&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="synchronous-remote-procedure-invocation"&gt;Synchronous remote procedure invocation
+&lt;/h2&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;รอการตอบสนอง (Blocking)&lt;/li&gt;
+&lt;li&gt;Circuit breaker pattern&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="ลกษณะ"&gt;ลักษณะ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Blocking เมื่อ Client ทำการ Request ไปหา Server และจะถูก Block (ต้องรอ) จนกว่า Server&lt;/li&gt;
+&lt;li&gt;one-to-one สื่อสารได้แค่ 1 คู่เท่านั้น&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอด"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ไม่มีปัญหาจู้จี้จุกจิกเหมือน Asynchronous messaging&lt;/li&gt;
+&lt;li&gt;เหมาะสมงานที่ต้องการคำตอบทันที (Realtime) หรือความถูกต้องสูง&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;High Coupling&lt;/strong&gt; หากมี Service ไหนตายไป ตายทั้งระบบ (Cascading Failure) เพราะรอการ Response จาก Service ที่ตายไปนั้นเอง ซึ่งจะไม่มีการตอบกลับมา&lt;/li&gt;
+&lt;li&gt;สื่อสารได้แค่ one-to-one คุยเป็นคู่ๆ เท่านั้น&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ประเดนสำคญ"&gt;ประเด็นสำคัญ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;gRPC ประหยัด Bandwidth&lt;/strong&gt; มากกว่า REST&lt;/li&gt;
+&lt;li&gt;ต้องมีการกำหนด &lt;strong&gt;Timeout&lt;/strong&gt; ของการ Request
+&lt;ul&gt;
+&lt;li&gt;เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังรอคนตาย&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Circuit breaker pattern&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;เพื่อป้องกัน Server ปลายทางตายแล้วต้นทางยังไปถามเรื่อยๆ&lt;/li&gt;
+&lt;li&gt;Circuit breaker เปรียบเสมือนสะพานไฟ ไว้กันไฟฟ้าลัดวงจร (Short Circuit) ถ้าในบริบทนี้หมายถึงป้องกันปลายทางตาย&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ถ้า Service มีหลายๆ Instance ต้องทำ Service Discovery
+&lt;ul&gt;
+&lt;li&gt;Client-Side Discovery&lt;/li&gt;
+&lt;li&gt;Server-Side Discovery&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="circuit-breaker-pattern"&gt;Circuit breaker pattern
+&lt;/h4&gt;&lt;p&gt;เรามาลองดูว่ามีเรื่องอะไรที่ต้องรู้เกี่ยวกับ &lt;strong&gt;Circuit breaker pattern&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;มี Library จัดการเรื่องพวกนี้ให้
+&lt;ul&gt;
+&lt;li&gt;เช่นใน golang มี &lt;a class="link" href="https://pkg.go.dev/github.com/afex/hystrix-go/hystrix" target="_blank" rel="noopener"
+ &gt;hystrix-go&lt;/a&gt; เป็นต้น&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;stateDiagram-v2
+ [*] --&gt; Closed: เริ่มต้น
+ 
+ Closed --&gt; Open: Error บ่อยๆ เกิน Threshold
+ 
+ Open --&gt; HalfOpen: รอครบเวลา
+ 
+ HalfOpen --&gt; Open: ทดสอบแล้วยัง Error
+ HalfOpen --&gt; Closed: ทดสอบแล้ว Success&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Closed&lt;/code&gt; สถานะวงจรปิด ทำให้ Request เกิดตามปกติไปหาปลายทาง
+&lt;ul&gt;
+&lt;li&gt;หาก Error เกิดบ่อยเกินไปจะพาไปสู่สถานะ &lt;code&gt;Open&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Open&lt;/code&gt; สถานะวงจรเปิด สั่งปิดการ Request ไปหาปลายทาง
+&lt;ul&gt;
+&lt;li&gt;รอเวลาสักพักเพื่อไปสู่สถานะ &lt;code&gt;HalfOpen&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HalfOpen&lt;/code&gt; ที่สถานะนี้จะเกิดได้ 2 กรณี
+&lt;ul&gt;
+&lt;li&gt;ไปสู่ &lt;code&gt;Closed&lt;/code&gt; เมื่อทดสอบแล้ว Success&lt;/li&gt;
+&lt;li&gt;ไปสู่ &lt;code&gt;Open&lt;/code&gt; เมื่อทดสอบแล้วยัง Error&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="service-discovery"&gt;Service Discovery
+&lt;/h4&gt;&lt;p&gt;เมื่อเราอยาก Scale โดยการขยายจำนวน Instance ของ Service เช่น เปิด Service A 5 ตัว เมื่อนั้นให้รู้ไว้ว่าเราต้องทำสองกรณีนี้เสมอคือ&lt;/p&gt;
+&lt;h5 id="1-client-side-discovery"&gt;1. Client-Side Discovery
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;Service Registry เทคโนโลยีและเครื่องมือสำคัญที่นิยมใช้ เช่น Netflix Eureka, HashiCorp Consul&lt;/li&gt;
+&lt;li&gt;Client-Side Load Balancer &amp;amp; Client Libraries เทคโนโลยีและเครื่องมือสำคัญที่นิยมใช้ เช่น Spring Cloud LoadBalancer, OpenFeign&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph TD
+ %% Nodes
+ SR(Service Registry)
+ Client[Client]
+ 
+ subgraph Service_Pool [Service A Instances]
+ S1[Service A #1]
+ S2[Service A #2]
+ S3[Service A #3]
+ end
+
+ %% Styles
+ style Client fill:#9b59b6,stroke:#333,stroke-width:2px,color:#fff
+ style SR fill:#e74c3c,stroke:#333,stroke-width:2px,color:#fff
+ style S1 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+ style S2 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+ style S3 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+
+ %% Flow
+ S1 &amp; S2 &amp; S3 -- "Register" --&gt; SR
+ Client -- "1. Query Registry" --&gt; SR
+ SR -. "2.Service Address" .-&gt; Client
+ Client -- "3. Call Direct" --&gt; S1&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;แต่ละ Instance ของ Service ต้อง register เข้า &lt;strong&gt;Service registry&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Client ต้องเป็นคนถามไปหา Server ว่ามีบริการอยู่ไหนบ้างเอง?&lt;/li&gt;
+&lt;li&gt;Client ต้องเลือก Instance ที่จะไปเอง (Direct call)
+&lt;ul&gt;
+&lt;li&gt;Client ต้องทำ &lt;strong&gt;Client-Side Load Balancing&lt;/strong&gt; ด้วยตัวเอง เพื่อให้เลือกได้อย่างเหมาะสมที่สุด&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id="2-server-side-discovery"&gt;2. Server-Side Discovery
+&lt;/h5&gt;&lt;pre class="mermaid" style="visibility:hidden"&gt;graph TD
+ %% Nodes
+ Client[Client]
+ LB(Load Balancer)
+ SR(Service Registry)
+ S1[Service A #1]
+ S2[Service A #2]
+ S3[Service A #3]
+
+ %% Styles
+ style Client fill:#9b59b6,stroke:#333,stroke-width:2px,color:#fff
+ style LB fill:#2ecc71,stroke:#333,stroke-width:2px,color:#000
+ style SR fill:#e74c3c,stroke:#333,stroke-width:2px,color:#fff
+ style S1 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+ style S2 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+ style S3 fill:#3498db,stroke:#333,stroke-width:2px,color:#fff
+
+ %% Steps
+ S1 -- "register" --&gt; SR
+ S2 -- "register" --&gt; SR
+ S3 -- "register" --&gt; SR
+ 
+ Client -- "1. call service" --&gt; LB
+ 
+ LB &lt;== "2. get address for service" ==&gt; SR
+ 
+ LB -- "3. call service" --&gt; S1&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;แต่ละ Instance ของ Service ต้อง register เข้า &lt;strong&gt;Service registry&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Client ติดต่อกับ &lt;strong&gt;Load balancer&lt;/strong&gt; ของ Server&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Load balancer&lt;/strong&gt; จะเป็นผู้เลือก Instance ให้ Client&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Client-Side Discovery เลือกเอง&lt;/li&gt;
+&lt;li&gt;Server-Side Discovery ให้ Server เลือกให้&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h2 id="asynchronous-messaging"&gt;Asynchronous messaging
+&lt;/h2&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ไม่รอการตอบสนอง (Non-blocking)&lt;/li&gt;
+&lt;li&gt;Message broker Pattern&lt;/li&gt;
+&lt;li&gt;Outbox Pattern&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="ลกษณะ-1"&gt;ลักษณะ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Non-blocking เมื่อ Client ทำการ Request ไม่ต้องรอ Response&lt;/li&gt;
+&lt;li&gt;สื่อสารแบบ one-to-one คุยเป็นคู่หรือ one-to-many คุยเป็นกลุ่มก็ได้&lt;/li&gt;
+&lt;li&gt;มีรูปแบบวิธีการสื่อสาร 2 รูปแบบ
+&lt;ul&gt;
+&lt;li&gt;Direct message (การสื่อสารตรง) 👎
+&lt;ul&gt;
+&lt;li&gt;Service รู้จักกันตรงๆ&lt;/li&gt;
+&lt;li&gt;ข้อเสีย คือ High Coupling ไม่ต่างจากแบบ Synchronous remote procedure invocation เช่น Service A คุยกับ Service B หากรู้จักกันตรงๆ จะพึ่งพากันมาเกินไป หาก Service B ตายจะส่งข้อมูลไม่ได้&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Message broker (การสื่อสารผ่านคนกลาง) 👍
+&lt;ul&gt;
+&lt;li&gt;Service ไม่ได้รู้จักกันตรงๆ รู้จักแค่ Broker คนกลาง&lt;/li&gt;
+&lt;li&gt;ข้อดี คือ Loose coupling อิสระต่อกัน ไม่พึ่งพากัน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Message broker เป็นตัวเลือกที่ดีที่สุด&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h4 id="message-broker"&gt;Message Broker
+&lt;/h4&gt;&lt;p&gt;เป็นดั่งไปรษณีย์ส่งจดหมายไปยัง Service ต่างๆ&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph LR
+ %% Nodes
+ A[Service A]
+ MB[Message Broker]
+ B[Service B]
+ C[Service C]
+ D[Service D]
+
+ %% Styles
+ style A fill:#e1e1e1,stroke:#333,stroke-width:1px
+ style MB fill:#e1e1e1,stroke:#333,stroke-width:1px
+ style B fill:#e1e1e1,stroke:#333,stroke-width:1px
+ style C fill:#e1e1e1,stroke:#333,stroke-width:1px
+ style D fill:#e1e1e1,stroke:#333,stroke-width:1px
+
+ %% Flow
+ A -- "Publish" --&gt; MB
+ MB --&gt; B
+ MB --&gt; C
+ MB --&gt; D&lt;/pre&gt;&lt;h3 id="ขอด-1"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Loose coupling แทบไม่ต้องพึ่งพากันเลย&lt;/li&gt;
+&lt;li&gt;Availability สูงกว่า เพราะหาก Service อื่นๆ ตายจะไม่พาเราตายไปด้วย&lt;/li&gt;
+&lt;li&gt;สื่อสารได้มากกว่า 1 คู่&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย-1"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ปัญหาจู้จี้จุกจิกเยอะกว่า Synchronous remote procedure invocation&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ปญหา"&gt;ปัญหา
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Duplicated message บางครั้งอาจจะเกิดข้อความซ้ำส่งไป (รับมือได้ ✅)&lt;/li&gt;
+&lt;li&gt;Incorrect Message Ordering บางครั้ง Message อาจจะผิดลำดับ (แก้ได้ ✅)&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;ตัวอย่างเช่น Service A มี Instance คือ S1, S2 และมี Message คือ M1, M2 หากว่าการส่ง Message กระจายตัวเป็นดังนี้&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;M1 ไปหา S1&lt;/li&gt;
+&lt;li&gt;M2 ไปหา S2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;มีความเป็นไปได้ที่ M2 จะไปถึงปลายทางก่อน M1 ทำให้การ Process ผิดลำดับไป&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;การ Update Database และการส่ง Message &lt;strong&gt;ไม่&lt;/strong&gt; Atomicity ทำให้เกิดเหตุการดังนี้ (แก้ได้ ✅)
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ส่งแต่ไม่ Update&lt;/strong&gt; คือการ Update ดันได้ Error และ Rollback ไปแล้ว แต่ยังส่ง Message ไปบอกแล้วว่า Update สำเร็วแล้ว (ทั้งๆ ที่การ Update นั้นถูกยกเลิกไปแล้ว)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Update แต่ไม่ส่ง&lt;/strong&gt; คือการ Update สำเร็จ แต่ส่ง Message &lt;strong&gt;ไม่สำเร็จ&lt;/strong&gt; อันนี้ปลายทางก็จะไม่รู้ว่า Update แล้ว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="การแกปญหา"&gt;การแก้ปัญหา
+&lt;/h3&gt;&lt;h4 id="การแกปญหา-duplicated-message"&gt;การแก้ปัญหา Duplicated message
+&lt;/h4&gt;&lt;p&gt;เราสามารถแก้ปัญหา Duplicated message ข้อความซ้ำได้โดยการบันทึก &lt;code&gt;Message ID&lt;/code&gt; ของข้อความที่รับมาลง Database เพื่อให้ระบบรู้ว่าข้อความนี้เคยทำแล้วหรอไม่ ในกรณีที่มีข้อความใหม่มา โดยเราจะทำการบันทึกลง &lt;code&gt;PROCESSED_MESSAGE table&lt;/code&gt; และอัพเดต Business Data Table ใน Transaction เดียวกัน&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;flowchart LR
+ Msg[Message] --&gt; App[Consumer App]
+ subgraph DB [Database Transaction]
+ App --&gt;|1. Insert| T[PROCESSED_MSG table]
+ App --&gt;|2. Update| Biz[Business Data Table]
+ end
+ T -.-&gt;|Duplicate Key Error| Ignore[Ignore Message]&lt;/pre&gt;&lt;h4 id="การแกปญหา-incorrect-message-ordering"&gt;การแก้ปัญหา Incorrect Message Ordering
+&lt;/h4&gt;&lt;p&gt;ปัญหานี้อาจจะพบเจอใน Tech อื่นๆ ได้บ้าง แต่ถ้าใช้ Kafka และ RabbitMQ พวกมันได้แก้ปัญหาพวกนี้ไปแล้ว&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph LR
+ subgraph P [Sender Side]
+ Sender[Sender] --&gt; Router{Router /&lt;br/&gt;Message Key}
+ end
+
+ subgraph Broker [Message Broker]
+ direction TB
+ subgraph P1 [Partition 1]
+ M1[orderId = 1]
+ end
+ subgraph P2 [Partition 2]
+ M2[orderId = 2]
+ end
+ subgraph P3 [Partition 3]
+ M3[orderId = 3]
+ end
+ end
+
+ subgraph C [Consumer Side]
+ P1 --&gt; Instance1[Service A&lt;br/&gt;Instance 1]
+ P2 --&gt; Instance2[Service A&lt;br/&gt;Instance 2]
+ P3 --&gt; Instance3[Service A&lt;br/&gt;Instance 3]
+ end
+
+ Router -- "Hashing(orderId)" --&gt; P1
+ Router -- "Hashing(orderId)" --&gt; P2
+ Router -- "Hashing(orderId)" --&gt; P3
+
+ style P1 fill:#f9f,stroke:#333,stroke-width:2px
+ style P2 fill:#f9f,stroke:#333,stroke-width:2px
+ style P3 fill:#f9f,stroke:#333,stroke-width:2px&lt;/pre&gt;&lt;p&gt;เนื่องจากปัญหาคือการกระจาย Message ไปยัง Instance ต่างๆ ของ Service ทำให้ข้อมูลผิดลำดับได้ถูกไหม? แล้วทางแก้ปัญหานั้นก็ง่ายแสนง่าย ก็คือให้ข้อความที่มี &lt;code&gt;Partition key&lt;/code&gt; อันเดียวกันส่งไปที่ Instance เดียวกัน&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Partition คือท่อส่งข้อความไปหาปลายทาง&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;เช่น จากภาพเราใช้ Partition key เป็น OrderId ลองดูไปที่ OrderId = 1 ทุกๆ Message ที่มี OrderId = 1 จะไปอยู่ใน Partition 1 ตลอดในช่วงเวลานึง ทำให้รับประกันว่า Message จะเรียงลำดับข้อความถูกต้องเพราะไม่กระจายไปมั่วๆ&lt;/p&gt;
+&lt;p&gt;ต่อให้ Message ที่ OrderId คนละอันกันส่งแบบกระจาย Instance ต่างๆ ก็ไม่เป็นอะไร เพราะ Order คนละตัวกันไม่น่ามีผลต่อกัน สำคัญคือ Order เดียวกันส่งไปที่ Partition เดียวกันก็พอแล้ว&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka จัดการเรื่องพวกนี้ให้แล้ว&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a class="link" href="https://github.com/Nextjingjing/go-god/tree/main/13-kafka" target="_blank" rel="noopener"
+ &gt;การใช้งานพื้นฐาน Kafka&lt;/a&gt;&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h4 id="การแกปญหาความไม-atomicity-ของ-updating-และ-messaging"&gt;การแก้ปัญหาความไม่ Atomicity ของ Updating และ Messaging
+&lt;/h4&gt;&lt;p&gt;เราจะใช้ &lt;strong&gt;Outbox Pattern&lt;/strong&gt; ในการแก้ปัญหานี้
+&lt;img alt="รูป outbox" class="gallery-image" data-flex-basis="675px" data-flex-grow="281" height="461" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://example.org/blogs/microservice/02-ipc/outbox.png" srcset="https://example.org/blogs/microservice/02-ipc/outbox_hu_77af83c2629bbae.png 800w, https://example.org/blogs/microservice/02-ipc/outbox.png 1298w" width="1298"&gt;
+รูปจาก &lt;a class="link" href="https://microservices.io/patterns/data/transactional-outbox.html" target="_blank" rel="noopener"
+ &gt;https://microservices.io/patterns/data/transactional-outbox.html&lt;/a&gt;&lt;/p&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;p&gt;โดยเราจะทำให้การ&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Update, Insert, Delete ข้อมูล Business&lt;/li&gt;
+&lt;li&gt;Insert ข้อความที่จะส่งลงใน Outbox Table&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ให้อยู่ใน Transaction เดียวกัน&lt;/p&gt;
+&lt;p&gt;และให้ Message Relay ไปอ่าน Outbox Table เพื่อส่งข้อความไปที่ Message broker&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;p&gt;การใช้ Transaction เดียวกันทั้งการ CRUD และ Messaging ทำให้เกิด Atomicity นั้นเอง&lt;/p&gt;
+&lt;p&gt;การ Implementation ของ Message Relay มีด้วยกัน 2 รูปแบบ&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Transaction Log Tailing (วิธีที่แนะนำ)
+&lt;ul&gt;
+&lt;li&gt;Relay อ่าน Database Transaction Log (ดักจับ log)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Polling Publisher (วิธีแบบง่าย แต่เป็นภาระ Database)
+&lt;ul&gt;
+&lt;li&gt;Relay อ่าน Query ตารางตรงๆ ทุกๆ x วินาที&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="บทสรปของ-message-broker"&gt;บทสรุปของ Message broker
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;จัดการ Duplicated message, ความไม่ Atomicity ของ CRUD และ Messaging
+&lt;ol&gt;
+&lt;li&gt;การบันทึก Insert message id ลง &lt;code&gt;Processed message table&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;การทำ &lt;code&gt;CRUD&lt;/code&gt; ของ Business&lt;/li&gt;
+&lt;li&gt;การส่งข้อความ Messaging ต้อง Insert ลง &lt;code&gt;Outbox table&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;(1)-(3) ทั้งหมดที่กล่าวมานี้ต้องอยู่ใน Transaction เดียวกัน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Partition key ใช้ป้องกันข้อความผิดลำดับได้&lt;/li&gt;
+&lt;li&gt;Message Relay ทำได้ 2 วิธี แต่ดีที่สุดคือ Transaction Log Tailing&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
+ &lt;div&gt;
+ 
+ &lt;a href="https://example.org/../01-ipc/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ← หน้าก่อนหน้า
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+
+ &lt;div&gt;
+ 
+ &lt;a href="../03-saga/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ตอนถัดไป →
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>Microservice ตอนที่ 1 Monolith vs Microservice</title><link>https://example.org/blogs/microservice/01-introduction/</link><pubDate>Mon, 30 Mar 2026 00:00:00 +0000</pubDate><guid>https://example.org/blogs/microservice/01-introduction/</guid><description>&lt;h1 id="monolith-vs-microservice"&gt;Monolith vs Microservice
+&lt;/h1&gt;&lt;h2 id="monolith"&gt;Monolith
+&lt;/h2&gt;&lt;p&gt;Monolith คือ Software pattern ที่รวมบริการทุกอย่างไว้ในที่ Repository เดียวกัน&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph TD
+ subgraph Monolith_App [Monolithic Application]
+ Auth[Auth Service]
+ Order[Order Service]
+ Pay[Payment Service]
+ end
+ Monolith_App --- DB[(Shared Database)]&lt;/pre&gt;&lt;h3 id="ลกษณะ"&gt;ลักษณะ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ในระบบนี้จะใช้ 1 Database เท่านั้น ทุกๆ บริการจะอยู่ใน Database ตัวนี้&lt;/li&gt;
+&lt;li&gt;บริการทุกอันอยู่ใน Repository เดียวกัน&lt;/li&gt;
+&lt;li&gt;หลายๆ บริการสามารถอยู่ใน Transaction เดียวกันได้ เนื่องจากยังไงก็มีแค่ 1 Database&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอด"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;จัดการ Transaction ง่ายเนื่องจากมีแค่ 1 Database (ACID)&lt;/li&gt;
+&lt;li&gt;Deploy ง่ายแค่เพราะมีแค่ก้อนๆ เดียว&lt;/li&gt;
+&lt;li&gt;Develop ง่ายๆ กว่าในช่วงแรกๆ ที่ระบบไม่ใหญ่มาก&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Maintenance ยากหากระบบใหญ่ขึ้นมาก ใช้เวลานานในการเพิ่ม หรือแก้ไข&lt;/li&gt;
+&lt;li&gt;การ Testing ทำได้ยากตอนที่ระบบใหญ่และใช้เวลานานมาก&lt;/li&gt;
+&lt;li&gt;ต้องบังคับใช้ Tech stack เดียวกันทั้งระบบ
+&lt;ul&gt;
+&lt;li&gt;ในขณะที่ Microservice สามารถแยก Tech stack ตามแต่ละบริการ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="microservice"&gt;Microservice
+&lt;/h2&gt;&lt;p&gt;คือ Software pattern ที่เขียนระบบเป็นบริการแยกๆ กันเป็น Service ที่มีหน้าที่เฉพาะของตนและเป็นอิสระต่อกันโดยสิ้นเชิง&lt;/p&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph TD
+ User((User)) --&gt; Gateway[API Gateway]
+
+ subgraph Auth_System [Auth Microservice]
+ Auth[Auth Service] --- DB1[(Auth DB)]
+ end
+
+ subgraph Order_System [Order Microservice]
+ Order[Order Service] --- DB2[(Order DB)]
+ end
+
+ subgraph Pay_System [Payment Microservice]
+ Pay[Payment Service] --- DB3[(Payment DB)]
+ end
+
+ Gateway --&gt; Auth
+ Gateway --&gt; Order
+ Gateway --&gt; Pay
+
+ Order -.-&gt; |การสื่อสารภายใน| Pay&lt;/pre&gt;&lt;h3 id="ลกษณะ-1"&gt;ลักษณะ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;แต่ละ Service มี Database เป็นของตนเองและแยกกับ Service อื่นๆ&lt;/li&gt;
+&lt;li&gt;แต่ละ Service มี Transaction แยกกัน เพราะอยู่กันคนละ Database&lt;/li&gt;
+&lt;li&gt;ต้องมีการสื่อสารภายในระหว่าง Services&lt;/li&gt;
+&lt;li&gt;แต่ละ Service มี Tech stack เป็นของต้นเองได้&lt;/li&gt;
+&lt;li&gt;แต่ละ Service แยกกัน Deployment ได้อิสระ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอด-1"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;พอระบบใหญ่ๆ จะ Maintenance ได้ง่ายกว่า Monolith มากๆ&lt;/li&gt;
+&lt;li&gt;Service เป็นอิสระต่อกันทำให้
+&lt;ul&gt;
+&lt;li&gt;แยกกันพัฒนาได้โดยแบ่งเป็นทีมเล็ก&lt;/li&gt;
+&lt;li&gt;แต่ละ Service เลือกใช้ Tech stack เป็นของตนเองได้&lt;/li&gt;
+&lt;li&gt;แยกกันได้ Deploy ตามแต่ละ Service&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ทดสอบง่ายเนื่องจากแยก Service ออกมาเป็นเล็กๆ ทำให้
+&lt;ul&gt;
+&lt;li&gt;ทดสอบได้เร็วและใช้เวลาน้อยกว่า Monolith&lt;/li&gt;
+&lt;li&gt;ทดสอบได้ง่ายกว่า Monolith&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;blockquote&gt;
+ &lt;p&gt;Microservice ไม่ใช่ยาวิเศษรักษาทุกโรค&lt;/p&gt;
+&lt;p&gt;ใช่ว่าจะดีกว่า Monolith เสมอไป!&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="ขอเสย-1"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ถ้าระบบไม่ใหญ่(ระบบเล็กๆ) Monolith จะดีกว่า&lt;/li&gt;
+&lt;li&gt;จัดการ Transaction ยากกว่า เพราะมีหลายๆ Databases (เดี๋ยวเรียนรู้ใน SAGA Pattern)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
+ &lt;div&gt;
+ 
+ &lt;a href="https://example.org/post/microservice/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ← หน้าก่อนหน้า
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+
+ &lt;div&gt;
+ 
+ &lt;a href="../02-ipc/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ตอนถัดไป →
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>
