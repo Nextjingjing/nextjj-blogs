@@ -1,7 +1,6 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://Nextjingjing.github.io/nextjj-blogs/'
 locale = 'en-us'
 title = 'Nextjingjing'
 theme = 'hugo-theme-stack'
-baseURL = 'https://Nextjingjing.github.io/nextjj-blogs/'
 relativeURLs = true
 canonifyURLs = true
