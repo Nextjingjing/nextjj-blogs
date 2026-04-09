@@ -924,7 +924,7 @@
 &lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
  &lt;div&gt;
  
- &lt;a href="../01-ipc/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ &lt;a href="../01-introduction/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
  ← หน้าก่อนหน้า
  &lt;/a&gt;
  
