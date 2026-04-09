@@ -219,7 +219,7 @@
 &lt;li&gt;Orchestration-based sagas (มีคนคุม)&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h3 id="choreography-based-sagas"&gt;Choreography-based sagas
-&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="565px" data-flex-grow="235" height="432" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga.png" srcset="../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_hu_a358ac71906cd95f.png 800w, ../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga.png 1018w" width="1018"&gt;&lt;/p&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="565px" data-flex-grow="235" height="432" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga.png" srcset="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_hu_a358ac71906cd95f.png 800w, https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga.png 1018w" width="1018"&gt;&lt;/p&gt;
 &lt;h4 id="ลกษณะ-1"&gt;ลักษณะ
 &lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;ไม่มีใครคุมลำดับของ saga
@@ -243,7 +243,7 @@
 &lt;li&gt;เข้าใจยากหาก saga มีลำดับยาว&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id="orchestration-based-sagas"&gt;Orchestration-based sagas
-&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="578px" data-flex-grow="240" height="608" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png" srcset="../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration_hu_88b1e79316abac1a.png 800w, ../nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png 1465w" width="1465"&gt;&lt;/p&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img alt="รูปจาก https://microservices.io/patterns/data/saga.html" class="gallery-image" data-flex-basis="578px" data-flex-grow="240" height="608" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png" srcset="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration_hu_88b1e79316abac1a.png 800w, https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/03-saga/Create_Order_Saga_Orchestration.png 1465w" width="1465"&gt;&lt;/p&gt;
 &lt;h4 id="ลกษณะ-2"&gt;ลักษณะ
 &lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;มีใครคุมลำดับของ saga
@@ -877,7 +877,7 @@
  &lt;/blockquote&gt;
 &lt;h4 id="การแกปญหาความไม-atomicity-ของ-updating-และ-messaging"&gt;การแก้ปัญหาความไม่ Atomicity ของ Updating และ Messaging
 &lt;/h4&gt;&lt;p&gt;เราจะใช้ &lt;strong&gt;Outbox Pattern&lt;/strong&gt; ในการแก้ปัญหานี้
-&lt;img alt="รูป outbox" class="gallery-image" data-flex-basis="675px" data-flex-grow="281" height="461" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="../nextjj-blogs/blogs/microservice/02-ipc/outbox.png" srcset="../nextjj-blogs/blogs/microservice/02-ipc/outbox_hu_77af83c2629bbae.png 800w, ../nextjj-blogs/blogs/microservice/02-ipc/outbox.png 1298w" width="1298"&gt;
+&lt;img alt="รูป outbox" class="gallery-image" data-flex-basis="675px" data-flex-grow="281" height="461" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/02-ipc/outbox.png" srcset="https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/02-ipc/outbox_hu_77af83c2629bbae.png 800w, https://Nextjingjing.github.io/nextjj-blogs/blogs/microservice/02-ipc/outbox.png 1298w" width="1298"&gt;
 รูปจาก &lt;a class="link" href="https://microservices.io/patterns/data/transactional-outbox.html" target="_blank" rel="noopener"
  &gt;https://microservices.io/patterns/data/transactional-outbox.html&lt;/a&gt;&lt;/p&gt;
 
@@ -1028,7 +1028,7 @@
 &lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
  &lt;div&gt;
  
- &lt;a href="../post/microservice/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ &lt;a href="https://Nextjingjing.github.io/nextjj-blogs/post/microservice/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
  ← หน้าก่อนหน้า
  &lt;/a&gt;
  
