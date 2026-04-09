@@ -172,7 +172,7 @@ graph TD
     - ข้อเสีย คือ High Coupling ไม่ต่างจากแบบ Synchronous remote procedure invocation เช่น Service A คุยกับ Service B หากรู้จักกันตรงๆ จะพึ่งพากันมาเกินไป หาก Service B ตายจะส่งข้อมูลไม่ได้
   - Message broker (การสื่อสารผ่านคนกลาง) 👍
     - Service ไม่ได้รู้จักกันตรงๆ รู้จักแค่ Broker คนกลาง
-    - ข้อดี คือ Low Coupling อิสระต่อกัน ไม่พึ่งพากัน
+    - ข้อดี คือ Loose coupling อิสระต่อกัน ไม่พึ่งพากัน
 
 > Message broker เป็นตัวเลือกที่ดีที่สุด
 
@@ -203,7 +203,7 @@ graph LR
     MB --> D
 ```
 ### ข้อดี
-- Low Coupling แทบไม่ต้องพึ่งพากันเลย
+- Loose coupling แทบไม่ต้องพึ่งพากันเลย
 - Availability สูงกว่า เพราะหาก Service อื่นๆ ตายจะไม่พาเราตายไปด้วย
 - สื่อสารได้มากกว่า 1 คู่
 
@@ -321,3 +321,5 @@ graph LR
   - (1)-(3) ทั้งหมดที่กล่าวมานี้ต้องอยู่ใน Transaction เดียวกัน
 - Partition key ใช้ป้องกันข้อความผิดลำดับได้
 - Message Relay ทำได้ 2 วิธี แต่ดีที่สุดคือ Transaction Log Tailing
+
+{{< page-nav prev-link="/../01-ipc/" next-link="../03-saga/">}}

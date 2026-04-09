@@ -655,7 +655,7 @@
 <li>Message broker (การสื่อสารผ่านคนกลาง) 👍
 <ul>
 <li>Service ไม่ได้รู้จักกันตรงๆ รู้จักแค่ Broker คนกลาง</li>
-<li>ข้อดี คือ Low Coupling อิสระต่อกัน ไม่พึ่งพากัน</li>
+<li>ข้อดี คือ Loose coupling อิสระต่อกัน ไม่พึ่งพากัน</li>
 </ul>
 </li>
 </ul>
@@ -689,7 +689,7 @@
     MB --> C
     MB --> D</pre><h3 id="ขอด-1">ข้อดี
 </h3><ul>
-<li>Low Coupling แทบไม่ต้องพึ่งพากันเลย</li>
+<li>Loose coupling แทบไม่ต้องพึ่งพากันเลย</li>
 <li>Availability สูงกว่า เพราะหาก Service อื่นๆ ตายจะไม่พาเราตายไปด้วย</li>
 <li>สื่อสารได้มากกว่า 1 คู่</li>
 </ul>
@@ -828,6 +828,23 @@
 <li>Partition key ใช้ป้องกันข้อความผิดลำดับได้</li>
 <li>Message Relay ทำได้ 2 วิธี แต่ดีที่สุดคือ Transaction Log Tailing</li>
 </ul>
+<div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        
+        <a href="/../01-ipc/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;">
+            ← หน้าก่อนหน้า
+        </a>
+        
+    </div>
+
+    <div>
+        
+        <a href="../03-saga/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;">
+            ตอนถัดไป →
+        </a>
+        
+    </div>
+</div>
 
 </section>
 
@@ -870,6 +887,17 @@
     <h2 class="section-title">Related content</h2>
     <div class="subsection-list">
         <div class="article-list--tile">
+            
+                
+<article class="">
+    <a href="/blogs/microservice/03-saga/">
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Microservice ตอนที่ 3 saga pattern</h2>
+        </div>
+    </a>
+</article>
             
                 
 <article class="">
