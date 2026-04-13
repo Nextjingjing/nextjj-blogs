@@ -5,6 +5,7 @@
 &lt;/h2&gt;&lt;p&gt;&lt;a class="link" href="../../blogs/microservice/01-introduction/" &gt;บทที่ 1: Monolith vs Microservice&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a class="link" href="../../blogs/microservice/02-ipc/" &gt;บทที่ 2: Inter process communication&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a class="link" href="../../blogs/microservice/03-saga/" &gt;บทที่ 3: การจัดการกับ Transaction ด้วย SAGA pattern&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class="link" href="../../blogs/microservice/04-query/" &gt;บทที่ 4: การจัดการกับ Query&lt;/a&gt;&lt;/p&gt;
 &lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
  &lt;div&gt;
  

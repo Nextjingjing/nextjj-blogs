@@ -1,4 +1,236 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Nextjingjing</title><link>https://Nextjingjing.github.io/blogs/</link><description>Recent content in Blogs on Nextjingjing</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 07 Apr 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://Nextjingjing.github.io/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>Microservice ตอนที่ 3 saga pattern</title><link>https://Nextjingjing.github.io/blogs/microservice/03-saga/</link><pubDate>Tue, 07 Apr 2026 00:00:00 +0000</pubDate><guid>https://Nextjingjing.github.io/blogs/microservice/03-saga/</guid><description>&lt;h1 id="การจดการกบ-transaction-ดวย-saga-pattern"&gt;การจัดการกับ Transaction ด้วย saga pattern
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Blogs on Nextjingjing</title><link>https://Nextjingjing.github.io/blogs/</link><description>Recent content in Blogs on Nextjingjing</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 11 Apr 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://Nextjingjing.github.io/blogs/index.xml" rel="self" type="application/rss+xml"/><item><title>Microservice ตอนที่ 4 Queries in Microservice</title><link>https://Nextjingjing.github.io/blogs/microservice/04-query/</link><pubDate>Sat, 11 Apr 2026 00:00:00 +0000</pubDate><guid>https://Nextjingjing.github.io/blogs/microservice/04-query/</guid><description>&lt;h1 id="การทำ-query-ใน-microservice"&gt;การทำ Query ใน Microservice
+&lt;/h1&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;การ Query เพื่อขออ่านจากหลายๆ Databases เป็นเรื่องที่ท้าทายกว่า Monolith เพราะแต่ละ Service ใน Microservice นั้นต่างก็มี Database เป็นของตนเอง&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;h2 id="ประเภทของการทำ-query-microservice"&gt;ประเภทของการทำ Query Microservice
+&lt;/h2&gt;&lt;p&gt;แบ่งออกเป็น 2 รูปแบบ ได้แก่&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;API composition pattern (รูปแบบการประกอบ API)&lt;/li&gt;
+&lt;li&gt;Command query responsibility segregation (CQRS) pattern&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="api-composition-pattern"&gt;API composition pattern
+&lt;/h2&gt;&lt;p&gt;&lt;img alt="https://microservices.io/patterns/data/api-composition.html" class="gallery-image" data-flex-basis="355px" data-flex-grow="148" height="320" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://Nextjingjing.github.io/blogs/microservice/04-query/ApiBasedQueryBigPicture.png" width="474"&gt;&lt;/p&gt;
+&lt;h3 id="ลกษณะ"&gt;ลักษณะ
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Provider service&lt;/code&gt; เป็น Service ที่มี Database ให้บริการ&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;API composer&lt;/code&gt; ทำหน้าที่เรียก Service ต่างๆ เพื่อ Query ข้อมูลออกมาจากแต่ละ Service ที่มี Database เป็นของตนเอง
+&lt;ul&gt;
+&lt;li&gt;ใครทำหน้าที่เป็น API composer ได้บ้าง
+&lt;ul&gt;
+&lt;li&gt;API Gateway ก็ได้&lt;/li&gt;
+&lt;li&gt;Backend for frontend (ทำเป็นอีก Service แยกสำหรับการ Query ก็ได้)&lt;/li&gt;
+&lt;li&gt;Frontend ก็ได้ แต่จะเปลืองเน็ตผู้ใช้เพราะต้องเรียก Service เองหลายๆ Request&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ควรเรียก &lt;strong&gt;Provider service&lt;/strong&gt; แบบขนานพร้อมกันให้ได้มากที่สุดเท่าที่จะเป็นไปได้&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอด"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ทำได้ง่ายกว่า CQRS มากๆ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;อาจจะมีประสิทธิภาพต่ำ
+&lt;ul&gt;
+&lt;li&gt;ลองคิดว่าเราต้อง &lt;strong&gt;Join table&lt;/strong&gt; ขนาดใหญ่ๆ หลายๆตาราง กรณีนี้เราจะเปลือง Memory มากๆ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;อาจจะลด Availability เพราะทุกๆ Service ต้องทำงานพร้อมกัน
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ทางแก้:&lt;/strong&gt; หากมีบาง Service ล่ม ให้ส่งข้อมูลที่มีและไม่ต้องส่งข้อมูลที่ล่มให้ผู้ใช้และอย่าลืมบอกว่า Service ล่มด้วย&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;มีสิทธิ์ที่จะได้ข้อมูลที่ Inconsistency (ไม่ถูกต้องสอดคล้อง)
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ทางแก้:&lt;/strong&gt; ต้องทำโค้ดตรวจจับอาการผิดปกติ เช่น อาจจะให้ API composer ส่ง Version Token ไปให้ผู้ใช้ทุกครั้ง โดย Version Token นี้ใช้เพื่อดูว่า Query ผู้ใช้เก่าแล้วหรือยัง?ดังนั้น API composer จะเช็คว่า Version Token ตรงกับเวอร์ชั้นล่าสุดไหม?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="command-query-responsibility-segregation-cqrs-pattern"&gt;Command query responsibility segregation (CQRS) pattern
+&lt;/h2&gt;&lt;p&gt;&lt;img alt="https://microservices.io/patterns/data/cqrs.html" class="gallery-image" data-flex-basis="249px" data-flex-grow="104" height="775" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://Nextjingjing.github.io/blogs/microservice/04-query/QuerySideService.png" srcset="https://Nextjingjing.github.io/blogs/microservice/04-query/QuerySideService_hu_4e2e83ab2ba494e7.png 800w, https://Nextjingjing.github.io/blogs/microservice/04-query/QuerySideService.png 807w" width="807"&gt;&lt;/p&gt;
+&lt;h3 id="ทำไมตองใช-cqrs-"&gt;ทำไมต้องใช้ CQRS ?
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;เพราะ API composition pattern ถ้าเกิดต้อง &lt;code&gt;Join table&lt;/code&gt; ตารางขนาดใหญ่ ทำให้เปลือง Memory มากๆ&lt;/li&gt;
+&lt;li&gt;Service ใช้ Database ที่ Query ไม่เก่ง
+&lt;ul&gt;
+&lt;li&gt;เช่น DynamoDB ไม่สามารถ Query อย่างอื่นนอกจาก Primary key ได้เลย&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Separate concerns&lt;/strong&gt; การแยกการอ่านกับการเขียนเพราะเขียนความถี่น้อยกว่าอ่านมากๆ ทำให้แยกจะดีกว่า (จะได้ไม่ค้างทั้งระบบ)
+&lt;ul&gt;
+&lt;li&gt;เช่น การค้นหาสถานที่สักอย่างใกล้ฉัน (Geo-spatial Query) มันเป็นภาระที่หนักมากๆ ทีม dev จึงนิยมแยกมันไปอยู่อีก Service ไปเลย&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ลกษณะ-1"&gt;ลักษณะ
+&lt;/h3&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;Aggregate เราจะกล่าวกันต่อในบทหลังๆ&lt;/p&gt;
+
+ &lt;/blockquote&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph TD
+ %% Global Style
+ classDef serviceBox fill:#d1f0ff,stroke:#333,stroke-width:2px;
+ classDef yellowBox fill:#fff9c4,stroke:#333,stroke-width:1.5px;
+ classDef purpleBox fill:#d1c4e9,stroke:#333,stroke-width:1.5px;
+ classDef whiteBox fill:#fff,stroke:#333,stroke-width:1px;
+
+ Title(CQRS) --- CRUD((CRUD operations))
+ CRUD --- Router
+
+ subgraph Service [Service]
+ direction TB
+ Router[ ]:::whiteBox
+ 
+ subgraph CommandSide [Command/domain model]
+ direction TB
+ Agg1[Aggregate]:::whiteBox
+ Agg2[Aggregate]:::whiteBox
+ end
+
+ subgraph QuerySide [Query model]
+ direction TB
+ EH[Event handler]:::whiteBox
+ end
+ 
+ Router -- CUD --&gt; CommandSide
+ Router -- R --&gt; QuerySide
+ 
+ CommandSide -- Events --&gt; EH
+ end
+
+ CommandSide --- CDB[(Command-side&lt;br/&gt;database)]
+ QuerySide --- QDB[(Query database)]
+
+ %% Apply Classes
+ class Service serviceBox;
+ class CommandSide,QuerySide yellowBox;
+ class CDB,QDB purpleBox;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;เราจะแยก Database ของการอ่าน (Query-side) กับการเขียน (Command-side) ออกจากกัน โดยจะ Sync กันด้วยการส่ง Event เพื่อสื่อสารแลกเปลี่ยนข้อมูลให้ข้อมูลทั้งสองตรงกัน (Query-side จะ Copy ตาม Command-side)
+&lt;ul&gt;
+&lt;li&gt;Database เป็นคนละเทคโนโลยีกันได้
+&lt;ul&gt;
+&lt;li&gt;ข้อดี: ทำให้แก้ปัญหา Database ฝั่ง Command-side ไม่เก่ง Query ดังนั้น Database ฝั่ง Query-side สามารถเลือก Database ที่ Query เก่งๆ ได้&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;เราจะแยกการเขียน (CUD) และการอ่าน (R) ออกจากกัน
+&lt;ul&gt;
+&lt;li&gt;Command-side จะทำหน้าที่รับคำสั่งเขียน (CUD) และจะส่ง Event (ผ่าน Message broker) ไปบอกว่าสร้างข้อมูลอะไรเพื่อ Sync ข้อมูลให้ตรงกัน&lt;/li&gt;
+&lt;li&gt;Query-side จะทำหน้าที่รับคำสั่งอ่าน (R) และจะมี Event handler ไว้รับข้อมูลการสร้างข้อมูลจากฝั่ง Command-side เพื่อ Sync ข้อมูลให้ตรงกัน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ฝั่ง Query-side ต้องอยู่ใน Service ไหน แยกเป็นอีก Service พิเศษดีไหม?
+&lt;ul&gt;
+&lt;li&gt;คำตอบ แน่นอนแยกเป็นอีก Service ดีที่สุด เช่น&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre class="mermaid" style="visibility:hidden"&gt;graph LR
+ classDef serviceNode fill:#d1f0ff,stroke:#333,stroke-width:1px;
+ classDef handlerNode fill:#c8e6c9,stroke:#333,stroke-width:1px;
+ classDef databaseNode fill:#d1c4e9,stroke:#333,stroke-width:1px;
+ classDef interfaceNode fill:#fff,stroke:#333,stroke-width:1px;
+
+ subgraph Commands [Command Side - Write]
+ direction TB
+ style Commands fill:none,stroke:none;
+
+ Cart_API(( )):::interfaceNode --- CS[Cart &amp; Checkout Service]:::serviceNode
+ Payment_API(( )):::interfaceNode --- PS[Payment Service]:::serviceNode
+ Inv_API(( )):::interfaceNode --- IS[Inventory Service]:::serviceNode
+ Ship_API(( )):::interfaceNode --- SS[Shipping Service]:::serviceNode
+ end
+
+ CS -- "Checkout&lt;br/&gt;events" --&gt; EH
+ PS -- "Payment&lt;br/&gt;events" --&gt; EH
+ IS -- "Stock&lt;br/&gt;events" --&gt; EH
+ SS -- "Tracking&lt;br/&gt;events" --&gt; EH
+
+ subgraph QuerySide [Query Side - Read]
+ direction TB
+ style QuerySide fill:none,stroke:none;
+ 
+ View_API(( )):::interfaceNode --- View_Label["getMyOrders()&lt;br/&gt;trackShipment()"]
+ View_Label --- OVS[Order View Service]:::serviceNode
+ OVS --- DB[(Query&lt;br/&gt;Database)]:::databaseNode
+ end
+
+ EH[Event&lt;br/&gt;Handlers]:::handlerNode --- OVS&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;จากรูปเราแยก Service สำหรับ Query ออกมาเป็น Service พิเศษ (จากรูปคือ Order View Service) และให้มันแลกเปลี่ยนข้อมูลกับ Service ที่มี Database ที่ต้องการ (จากรูปคือ Cart &amp;amp; Checkout Service, Payment Service, Inventory Service และ Shipping Service)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอด-1"&gt;ข้อดี
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;ประสิทธิภาพของการ Query สูงกว่า&lt;/li&gt;
+&lt;li&gt;แยกการเขียนและการอ่านออกจากกันชัดเจน (Separate concerns)
+&lt;ul&gt;
+&lt;li&gt;ดีกับระบบที่อ่านเยอะกว่าเขียนมากๆ&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="ขอเสย-1"&gt;ข้อเสีย
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;มีความซับซ้อนสูงมาก&lt;/li&gt;
+&lt;li&gt;อาจจะมี Lag ของ Command-side กับ Query-side ทำให้เกิด Inconsistency ของข้อมูล
+&lt;ul&gt;
+&lt;li&gt;แก้ได้&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="คำแนะนำ"&gt;คำแนะนำ
+&lt;/h3&gt;
+ &lt;blockquote&gt;
+ &lt;p&gt;&lt;strong&gt;Important Note&lt;/strong&gt; 📝:&lt;/p&gt;
+&lt;p&gt;เราควรใช้ API composition pattern เป็นตัวเลือกแรก และใช้ CQRS เมื่อจำเป็นเท่านั้น เช่น&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Database ของ Service ที่สนใจมี Query ที่ไม่เก่ง&lt;/li&gt;
+&lt;li&gt;ภาระการอ่านเยอะกว่าเขียนมากๆ&lt;/li&gt;
+&lt;li&gt;ต้อง Join table ขนาดใหญ่ ทำให้ Memory ใช้เยอะ&lt;/li&gt;
+&lt;/ul&gt;
+
+ &lt;/blockquote&gt;
+&lt;h3 id="การ-implement-ของ-cqrs"&gt;การ Implement ของ CQRS
+&lt;/h3&gt;&lt;h4 id="การเลอก-database-ของฝง-query"&gt;การเลือก Database ของฝั่ง Query
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;อยากอ่านไวที่สุด ไม่สนความสัมพันธ์ = NoSQL (Document Store)&lt;/li&gt;
+&lt;li&gt;อยาก Search ชื่อสินค้า/บทความ เก่งๆ = Search Engine (Elasticsearch)&lt;/li&gt;
+&lt;li&gt;อยากทำ Dashboard/Report ซับซ้อน = SQL (RDBMS)&lt;/li&gt;
+&lt;li&gt;ไม่แน่ใจ แต่อยากได้ความยืดหยุ่น = SQL (PostgreSQL)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ปองกน-duplicated-messages"&gt;ป้องกัน Duplicated messages
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;มีตารางไว้จด Event ที่เคย Process ไปแล้ว &lt;code&gt;PROCESSED_EVENTS&lt;/code&gt; เพื่อป้องกันการซ้ำการส่งของ Message Broker&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ปองกน-inconsistency"&gt;ป้องกัน Inconsistency
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;ใช้ Version token เพื่อเช็คว่า Query ของผู้ใช้เก่าไปแล้วหรือไม่ เพราะเมื่อมีการอัพเดต database ตลอดมีโอกาสที่ผู้ใช้จะมี Query ที่ยังไม่อัพเดต&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="ปองกน-concurrency-ใน-record-เดยวกน"&gt;ป้องกัน Concurrency ใน Record เดียวกัน
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;ใช้ Pessimistic Locking เช่น ทำ state แบบ &lt;code&gt;*_PENDING&lt;/code&gt; เพื่อป้องกันการเขียนทับ Record เดียวกัน&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
+ &lt;div&gt;
+ 
+ &lt;a href="../03-saga/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ← หน้าก่อนหน้า
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+
+ &lt;div&gt;
+ 
+ &lt;a href="../04-query/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ ตอนถัดไป →
+ &lt;/a&gt;
+ 
+ &lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>Microservice ตอนที่ 3 saga pattern</title><link>https://Nextjingjing.github.io/blogs/microservice/03-saga/</link><pubDate>Tue, 07 Apr 2026 00:00:00 +0000</pubDate><guid>https://Nextjingjing.github.io/blogs/microservice/03-saga/</guid><description>&lt;h1 id="การจดการกบ-transaction-ดวย-saga-pattern"&gt;การจัดการกับ Transaction ด้วย saga pattern
 &lt;/h1&gt;
  &lt;blockquote&gt;
  &lt;p&gt;เนื่องจาก Microservice แต่ละ Service มี Database เป็นของตนเอง การจัดการกับ Transaction จึงแตกต่างออกไปจาก Monolith อย่างมาก&lt;/p&gt;
@@ -533,7 +765,7 @@
 
  &lt;div&gt;
  
- &lt;a href="../03-saga/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
+ &lt;a href="../04-query/" style="background-color: var(--card-background); border: 1px solid var(--main-border-color); padding: 10px 20px; border-radius: 8px; text-decoration: none; color: var(--card-text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: inline-block;"&gt;
  ตอนถัดไป →
  &lt;/a&gt;
  
