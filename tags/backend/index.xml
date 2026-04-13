@@ -212,7 +212,8 @@
 &lt;/ul&gt;
 &lt;h4 id="ปองกน-concurrency-ใน-record-เดยวกน"&gt;ป้องกัน Concurrency ใน Record เดียวกัน
 &lt;/h4&gt;&lt;ul&gt;
-&lt;li&gt;ใช้ Pessimistic Locking เช่น ทำ state แบบ &lt;code&gt;*_PENDING&lt;/code&gt; เพื่อป้องกันการเขียนทับ Record เดียวกัน&lt;/li&gt;
+&lt;li&gt;ใช้ Pessimistic locking เช่น &lt;code&gt;SELECT ... FOR UPDATE;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;ใช้ Optimistic locking เช็คว่า Version ตรงกับปัจจุบันหากไม่ตรงแสดงว่ามีคนเขียนก่อนเรา เช่น &lt;code&gt;WHERE version = current_version&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;div style="margin-top: 50px; display: flex; justify-content: space-between; align-items: center;"&gt;
  &lt;div&gt;
