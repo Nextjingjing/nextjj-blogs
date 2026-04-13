@@ -174,6 +174,7 @@ graph LR
 - ใช้ Version token เพื่อเช็คว่า Query ของผู้ใช้เก่าไปแล้วหรือไม่ เพราะเมื่อมีการอัพเดต database ตลอดมีโอกาสที่ผู้ใช้จะมี Query ที่ยังไม่อัพเดต
 
 #### ป้องกัน Concurrency ใน Record เดียวกัน
-- ใช้ Pessimistic Locking เช่น ทำ state แบบ `*_PENDING` เพื่อป้องกันการเขียนทับ Record เดียวกัน
+- ใช้ Pessimistic locking เช่น `SELECT ... FOR UPDATE;`
+- ใช้ Optimistic locking เช็คว่า Version ตรงกับปัจจุบันหากไม่ตรงแสดงว่ามีคนเขียนก่อนเรา เช่น `WHERE version = current_version`
 
 {{< page-nav prev-link="../03-saga/" next-link="../04-query/">}}
