@@ -354,4 +354,4 @@ Cancel Order Saga
 - ความเสี่ยงสูง ให้ใช้ Distributed Transactions (เช่น 2PC)
   - ประสิทธิภาพต่ำ แต่ปลอดภัยสูงกว่า
 
-{{< page-nav prev-link="../02-ipc/" next-link="../03-saga/">}}
+{{< page-nav prev-link="../02-ipc/" next-link="../04-query/">}}
